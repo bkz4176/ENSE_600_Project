@@ -1,0 +1,6 @@
+Name, Bank Balance
+
+Eosie, 0
+Bill, 80
+Daniel, 0
+Jane, 60
