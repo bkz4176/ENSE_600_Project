@@ -28,7 +28,7 @@ public class ActualPlayer extends Player {
         this.firstTurn = true;
     }
 
-    public static List<ActualPlayer> initializePlayers() // method to get the number of players and the name of each player
+      public static List<ActualPlayer> initializePlayers(ArrayList<String> names) // method to get the number of players and the name of each player
     //If the player has played a game previously it loads the existing balance of the player.
     {
         
@@ -37,69 +37,29 @@ public class ActualPlayer extends Player {
         String space = " ";
         String width = space.repeat(11)+"* ";
         System.out.print(width+"Enter the number of players(1-7): ");
-        int numberOfPlayers = 0;
-        boolean validInput = false;
-        while(!validInput)
-        {
-            String input = scanner.nextLine();
-            if (input.equalsIgnoreCase("q"))
-            {
-                System.out.println(width+"Quitting the game.");
-                DataFile.log("Quitting the game.");
-                System.exit(0); // Exit the program
-            }
-            try
-            {
-                numberOfPlayers = Integer.parseInt(input);
-                if(numberOfPlayers <=0 || numberOfPlayers >7)
-                {
-                    System.out.println(width + "Please enter an interger greater than zero or less than 8.");
-                    System.out.print(width + "Enter the number of players: ");
-                }
-                else
-                {
-                    DataFile.log("Enter the number of players: "+ numberOfPlayers+"\n");
-                    validInput = true;
-                }
-            }
-            catch(NumberFormatException e)
-            {
-                DataFile.log("Enter the number of players: "+ input);
-                System.out.println(width+"Invalid input. Please enter a integer!");
-                DataFile.log("Invalid input. Please enter a integer!");
-                System.out.print(width+"Enter the number of players: ");
-            }
-        }
-        System.out.println();
         Map<String, Integer> existingPlayerInfo = DataFile.readPlayerInfo("Player_Info.txt");
-        for (int i = 1; i <= numberOfPlayers; i++) 
+  
+        
+        for(String s : names)
         {
-            System.out.print(width+"Enter the name of player " + i + ": ");
-            String name = scanner.nextLine();
-            if (name.equalsIgnoreCase("q"))
-                {
-                    System.out.println(width+"Quitting the game.");
-                    DataFile.log("Quitting the game.");
-                    System.exit(0); // Exit the program
-                }
-            DataFile.log("Enter the name of player " + i + ": "+ name);
-            if(existingPlayerInfo.containsKey(name))
+             if(existingPlayerInfo.containsKey(s))
             {
-                int balance = existingPlayerInfo.get(name);
+                int balance = existingPlayerInfo.get(s);
                 if(balance == 0)
                 {
-                    System.out.println(width + "Welcome back, " + name + "! A new balance has been loaded for you");
-                    players.add(new ActualPlayer(name));
+                    System.out.println(width + "Welcome back, " + s + "! A new balance has been loaded for you");
+                    players.add(new ActualPlayer(s));
                 }
                 else
                 {
-                    System.out.println(width + "Welcome back, " + name + "! Your balance has been loaded");
-                    players.add(new ActualPlayer(name, balance));
+                    System.out.println(width + "Welcome back, " + s + "! Your balance has been loaded");
+                    players.add(new ActualPlayer(s, balance));
                 }    
             }
             else
             {
-                players.add(new ActualPlayer(name));
+                players.add(new ActualPlayer(s));
+                System.out.println(width + "Welcome " + s);
             }
         }
         DataFile.log(""); 

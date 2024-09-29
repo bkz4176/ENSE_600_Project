@@ -65,19 +65,13 @@ public class BlackJack {
     public static void main(String[] args) {
        
 
-        javax.swing.SwingUtilities.invokeLater(new Runnable(){
-        @Override
-        public void run()
-        {
-            // Create and display the BlackJack GUI
-            BlackJackGUI gui = new BlackJackGUI();
-            gui.setVisible(true);  // Make the GUI visible
-        }
-    });
+        Model model = new Model();
+        View view = new View();
+        Controller controller = new Controller(view, model);
         try (scanner) {
             BlackJack game = new BlackJack();
       
-            players = ActualPlayer.initializePlayers();
+            //players = ActualPlayer.initializePlayers();
             while(!players.isEmpty())
             {  
                 game.start();
