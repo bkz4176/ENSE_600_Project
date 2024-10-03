@@ -8,8 +8,8 @@ package blackjack;
  *
  * @author daniel
  */
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.util.ArrayList;
+import javax.swing.JTextField;
 
 public class Controller {
     private View view;
@@ -19,10 +19,13 @@ public class Controller {
         this.view = view;
         this.model = model;
 
-        view.getGameRulesButton().addActionListener(e -> showRules());
-        view.getPlayGameButton().addActionListener(e -> showPlayers()); // Placeholder for play game
-        view.getPlayerStatsButton().addActionListener(e -> showStats());
-        
+        view.getRulesButton().addActionListener(e -> showRules());
+        view.getPlayButton().addActionListener(e -> showPlayers()); // Placeholder for play game
+        view.getStatsButton().addActionListener(e -> showStats());
+        view.getSubmitButton().addActionListener(e -> {
+            getNumPlayers();  
+            view.getStartButton().addActionListener(e2 -> getPlayerNames());
+        });
     }
 
     private void showStats() {
@@ -36,12 +39,38 @@ public class Controller {
     
     private void showPlayers()
     {
-        view.switchToPanel(view.getPlayersPanel());
-    }
-
-    private void showPlayGame() {
-        // Implement play game logic here
+        view.switchToPanel(view.getPlayPanel());
     }
     
+    private void showBlackjack()
+    {
+        view.switchToPanel(view.getBlackJackPanel());
+    }
     
+    private void getNumPlayers()
+    {
+        int numberOfPlayers = view.getSpinnerValue();
+        model.setNumOfPlayer(numberOfPlayers);
+        System.out.println("Number of Players: "+ model.getNumOfPlayers());//debugger
+        view.nameFields(numberOfPlayers);
+    }
+    
+    private void getPlayerNames()
+    {
+        System.out.println("Start button clicked!");
+        ArrayList<String> playerNames = new ArrayList<>();
+        for(JTextField f : view.getNameFields())
+        {
+            playerNames.add(f.getText().trim());
+        }
+        model.setPlayerNames(playerNames);
+        int x =1;
+        for(String s : playerNames)
+        {
+            System.out.println("Player "+x+": "+s); // debugger
+            x++;
+        }
+        showBlackjack();
+        ActualPlayer.initializePlayers(playerNames);
+    }
 }

@@ -8,152 +8,221 @@ package blackjack;
  *
  * @author daniel
  */
-import javax.swing.*;
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.Font;
+import java.awt.GridBagConstraints;
+import java.awt.GridLayout;
+import java.awt.Image;
 import java.util.ArrayList;
-import java.util.List;
+import javax.swing.*;
+
 
 public class View extends JFrame {
+    
     private JPanel welcomePanel;
     private JPanel statsPanel;
     private JPanel rulesPanel;
-    private JPanel playersPanel;
-    private JTextArea rulesTextArea;
-    private JButton gameRulesButton;
-    private JButton playGameButton;
-    private JButton playerStatsButton;
-    private JButton backButton;
-    private JButton submitButton;
-    private JSpinner spinner;
-    private List<JTextField> playerNameFields;
-    private int numberOfPlayers;
-    private JPanel playerNames;
-    private ArrayList<String> names = new ArrayList<>();
-    private JButton submitNamesButton;
+    private JPanel playPanel;
+    private JPanel blackJackPanel;
     
-    public View() {
+    private JButton submitButton;
+    private JButton statsButton;
+    private JButton rulesButton;
+    private JButton playButton;
+    private JButton backButton;
+    private JButton startButton;
+    
+    private GridBagConstraints gbc = new GridBagConstraints();
+    private JTextArea rulesTextArea;
+    private ArrayList<JTextField> nameFields;
+    
+    
+    private JSpinner spinner;
+    private String spacing = " ";
+     
+    public View()
+    {
         setTitle("BlackJack Game");
-        setSize(800, 600);
+        setSize(750, 550);
+        setLayout(null);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setLocationRelativeTo(null);
-        names = new ArrayList<>();
         initializeComponents();
         setContentPane(welcomePanel);
         setVisible(true);
         
     }
-
+    
     private void initializeComponents() {
-        welcomePanel = createWelcomePanel();
-        statsPanel = createStatsPanel();
-        rulesPanel = createRulesPanel();
-        playersPanel = createPlayersPanel();
-  
-    }
-
-    private JPanel createWelcomePanel() {
-        JPanel panel = new JPanel(new GridLayout(3, 1, 10, 10));
-        panel.setBackground(new Color(53, 101, 77));
-
-        JLabel welcomeLabel = createLabel("Welcome to Blackjack!", 32, Color.YELLOW);
-        panel.add(welcomeLabel);
-        JPanel spacerPanel = new JPanel(); // Spacer Panel
-        spacerPanel.setBackground(new Color(53,101,77));
-        panel.add(spacerPanel); // Add spacer panel to the main panel
-
-        JPanel buttonPanel = new JPanel();
-        buttonPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 20, 0));
-        buttonPanel.setBackground(new Color(53, 101, 77));
-
-        gameRulesButton = createButton("Game Rules");
-        playGameButton = createButton("Play Game"); // Placeholder for play game functionality
-        playerStatsButton = createButton("Player Stats");
-
-        buttonPanel.add(gameRulesButton);
-        buttonPanel.add(playGameButton);
-        buttonPanel.add(playerStatsButton);
-        panel.add(buttonPanel);
-
-        return panel;
-    }
-
-    private JPanel createStatsPanel() {
-        JPanel panel = new JPanel(new BorderLayout());
-        panel.setBackground(new Color(53, 101, 77));
-        
-        JLabel statsLabel = createLabel("Player Stats", 32, Color.YELLOW);
-        JPanel headerPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        headerPanel.setBackground(new Color(53, 101, 77));
+        welcomePanel = welcomePanel();
+        rulesPanel = rulesPanel();
+        statsPanel = statsPanel();
+        playPanel = playPanel();
+        blackJackPanel = blackJackPanel();
        
-        backButton = createButton("Back to Menu");
-        headerPanel.add(backButton);
-        headerPanel.add(statsLabel);
-        panel.add(headerPanel, BorderLayout.NORTH);
-        clickBackButton();
-
+    }
+    
+    private JPanel welcomePanel()
+    {
+        JPanel panel = new JPanel(new GridLayout(3, 1, 10, 10));//this panel has 3 rows, 1 column, height is 10
+        
+        panel.setBackground(new Color(53, 101, 77));
+        JLabel label = createLabel("Welcome to Blackjack!", 32, Color.YELLOW);
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.setBackground(new Color(53, 101, 77));
+        statsButton = createButton("Statistics");
+        rulesButton = createButton("Games Rules");
+        playButton = createButton("Play");
+        
+        buttonPanel.add(statsButton);
+        buttonPanel.add(playButton);
+        buttonPanel.add(rulesButton);
+       
+        panel.add(label);
+        panel.add(spacerPanel());
+        panel.add(buttonPanel);
+        
         return panel;
     }
-
-    private JPanel createRulesPanel() {
+    
+    private JPanel rulesPanel()
+    {
+        
         JPanel panel = new JPanel(new BorderLayout());
         panel.setBackground(new Color(53, 101, 77));
-
-        JLabel rulesLabel = createLabel("Game Rules", 32, Color.YELLOW);
+        JLabel label = createLabel(spacing.repeat(20)+"Games Rules", 32, Color.YELLOW);
+        
         JPanel headerPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         headerPanel.setBackground(new Color(53, 101, 77));
+        backButton = createButton("Back");
+      
+        headerPanel.add(backButton); 
+        headerPanel.add(label);
+        panel.add(headerPanel,BorderLayout.PAGE_START);
         
-        backButton = createButton("Back to Menu");
-        headerPanel.add(backButton);
-        headerPanel.add(rulesLabel);
-        panel.add(headerPanel, BorderLayout.NORTH);
-
         rulesTextArea = new JTextArea();
         rulesTextArea.setEditable(false);
         rulesTextArea.setBackground(new Color(53, 101, 77));
         rulesTextArea.setForeground(Color.WHITE);
-        rulesTextArea.setFont(new Font("Serif", Font.PLAIN, 16));
+        rulesTextArea.setFont(new Font("Serif", Font.BOLD, 16));
         panel.add(new JScrollPane(rulesTextArea), BorderLayout.CENTER);
-        clickBackButton();
-
+        
+        clickBackButton(welcomePanel);
         return panel;
+        
     }
     
-    private JPanel createPlayersPanel()
+    private JPanel statsPanel()
+    {
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.setBackground(new Color(53, 101, 77));
+        JLabel label = createLabel(spacing.repeat(25)+"Statistics", 32, Color.YELLOW);
+        JPanel headerPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        headerPanel.setBackground(new Color(53, 101, 77));
+        backButton = createButton("Back");
+      
+        headerPanel.add(backButton); 
+        headerPanel.add(label);
+        panel.add(headerPanel,BorderLayout.PAGE_START);
+        clickBackButton(welcomePanel);
+        
+        return panel;
+        
+    }
+    
+    private JPanel playPanel()
     {
         JPanel panel = new JPanel(new BorderLayout());
         panel.setBackground(new Color(53, 101, 77));
         
-        
-        JLabel playersLabel = createLabel("Enter the amount of Players (1-7)", 32, Color.YELLOW);
         JPanel headerPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         headerPanel.setBackground(new Color(53, 101, 77));
+        backButton = createButton("Back");
         
-        backButton = createButton("Back to Menu");
+        JPanel playerPanel = new JPanel(new FlowLayout());
+        playerPanel.setBackground(new Color(53, 101, 77));
+        JLabel numOfPlayers = createLabel("Select the Number of Players", 20, Color.YELLOW);
+        playerPanel.setBorder(BorderFactory.createEmptyBorder(30, 0, 0, 0)); // IMPPRTANT!!
+        
         
         SpinnerModel model = new SpinnerNumberModel(1, 1, 7, 1); // Initial value, min, max, step
         spinner = new JSpinner(model);
         spinner.setPreferredSize(new Dimension(60, 30));
-        
-        JPanel spinnerPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
-        spinnerPanel.setBackground(new Color(53, 101, 77)); // Keep consistent background
-        spinnerPanel.add(spinner);
-        
         submitButton = createButton("Submit");
-        spinnerPanel.add(submitButton);
         
-        headerPanel.add(backButton);
-        headerPanel.add(playersLabel);
-        panel.add(headerPanel, BorderLayout.NORTH);
-        panel.add(spinnerPanel, BorderLayout.CENTER);
-        clickBackButton();
-        clickSubmitButton();
+        playerPanel.add(numOfPlayers);
+        playerPanel.add(spinner);
+        playerPanel.add(submitButton);
+        headerPanel.add(backButton); 
+        panel.add(headerPanel,BorderLayout.PAGE_START);
+        panel.add(playerPanel,BorderLayout.CENTER);
         
-        playerNames = new JPanel();
-        playerNames.setLayout(new BoxLayout(playerNames, BoxLayout.Y_AXIS));
-        panel.add(playerNames, BorderLayout.SOUTH);
+
+        clickBackButton(welcomePanel);
         
-        playerNameFields = new ArrayList<>();
         return panel;
+    }
+    
+    public void nameFields(int numberOfPlayers)
+    {
+        JPanel namePanel = new JPanel(new BorderLayout());
+        namePanel.setBackground(new Color(53, 101, 77));
+
+        JPanel headerPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        headerPanel.setBackground(new Color(53, 101, 77));
+        backButton = createButton("Back");
+        
+        JLabel heading = createLabel(spacing.repeat(40)+"Enter Player Names:", 20, Color.YELLOW);
+
+        JPanel nameBox = new JPanel();
+        nameBox.setLayout(new BoxLayout(nameBox, BoxLayout.Y_AXIS));
+        nameBox.setBackground(new Color(53, 101, 77));
+        nameBox.setBorder(BorderFactory.createEmptyBorder(30, 0, 0, 0));
+        
+        nameFields = new ArrayList<>();
+    for (int i = 1; i <= numberOfPlayers; i++)
+    {
+        JPanel playerPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        playerPanel.setBackground(new Color(53, 101, 77));
+        JLabel playerLabel = createLabel("Player " + i + " Name: ", 16, Color.YELLOW);
+        JTextField nameField = new JTextField(10);  
+        
+        nameField.setMaximumSize(new Dimension(280, 30)); // Maximum width and height
+        nameField.setHorizontalAlignment(JTextField.CENTER);
+        
+        nameFields.add(nameField);
+        playerPanel.add(playerLabel);
+        playerPanel.add(nameField);
+        nameBox.add(playerPanel);
+    }
+    
+        headerPanel.add(backButton);
+        headerPanel.add(heading);
+        startButton = createButton("Start Game");
+        namePanel.add(headerPanel,BorderLayout.PAGE_START);
+        namePanel.add(nameBox,BorderLayout.CENTER);
+        namePanel.add(startButton,BorderLayout.PAGE_END);
+        // Clear the current panel and add the new player panel
+        switchToPanel(namePanel);
+        clickBackButton(playPanel);
+    }
+    
+    private JPanel blackJackPanel()
+    {
+        JPanel mainPanel = new JPanel(new BorderLayout());
+        mainPanel.setBackground(new Color(53, 101, 77));
+        
+        JPanel headerPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        headerPanel.setBackground(new Color(53, 101, 77));
+        
+        
+        backButton = createButton("Back to Home");
+        headerPanel.add(backButton);
+        mainPanel.add(headerPanel);
+        clickBackButton(welcomePanel);
+        return mainPanel;
     }
     
     private JLabel createLabel(String text, int fontSize, Color color) {
@@ -162,41 +231,55 @@ public class View extends JFrame {
         label.setFont(new Font("Serif", Font.BOLD, fontSize));
         return label;
     }
-
-    private JButton createButton(String text) {
+    
+     private JButton createButton(String text) {
         return new JButton(text);
+        
+        
     }
-
-    public void setRulesText(String rules) {
-        rulesTextArea.setText(rules);
+     
+     private void clickBackButton(JPanel panel)
+    {
+        backButton.addActionListener(e -> {
+        switchToPanel(panel);
+        });
     }
-
+     
+    private JPanel spacerPanel()
+    {
+        JPanel panel = new JPanel();
+        panel.setBackground(new Color(53, 101, 77));
+        return panel;  
+    }
+    
     public void switchToPanel(JPanel newPanel) {
         setContentPane(newPanel);
         revalidate();
         repaint();
     }
-
-    public JButton getGameRulesButton() {
-        return gameRulesButton;
+    
+    public JButton getRulesButton() {
+        return rulesButton;
     }
 
-    public JButton getPlayGameButton() {
-        return playGameButton;
+    public JButton getPlayButton() {
+        return playButton;
     }
 
-    public JButton getPlayerStatsButton() {
-        return playerStatsButton;
-    }
-   
-    public JButton getBackButton() {
-        return backButton;
+    public JButton getStatsButton() {
+        return statsButton;
     }
     
-    public JButton getSubmitButton() {
+    public JButton getSubmitButton()
+    {
         return submitButton;
     }
-
+    
+    public JButton getStartButton()
+    {
+        return startButton;
+    }
+    
     JPanel getRulesPanel() {
         return rulesPanel;
     }
@@ -205,73 +288,43 @@ public class View extends JFrame {
         return statsPanel;
     }
     
-    JPanel getPlayersPanel()
+    JPanel getPlayPanel()
     {
-        return playersPanel;
+        return playPanel;
     }
     
-    private void clickBackButton()
+    JPanel getBlackJackPanel()
     {
-         backButton.addActionListener(e -> {
-         switchToPanel(welcomePanel);
-        });
+        return blackJackPanel;
     }
     
-    private void clickSubmitButton()
+    public void setRulesText(String rules)
     {
-            submitButton.addActionListener(e ->{
-            numberOfPlayers = (int) spinner.getValue();
-            //ActualPlayer.initializePlayers(numberOfPlayers);
-            createPlayerNameFields(numberOfPlayers);
-            
-        });
+        rulesTextArea.setText(rules);
+    }
+    
+    private void addImageToPanel(JPanel panel, String imagePath) {
+        // Load the image
+        ImageIcon imageIcon = new ImageIcon(imagePath);
         
+        // Optionally, resize the image to fit the panel
+        Image img = imageIcon.getImage().getScaledInstance(100, 50, Image.SCALE_SMOOTH); // You can change dimensions
+        ImageIcon resizedIcon = new ImageIcon(img);
+        
+        // Create a label with the resized image
+        JLabel imageLabel = new JLabel(resizedIcon);
+
+        // Add the image label to the panel
+        panel.add(imageLabel);
     }
-    private void clickSubmitNameButton()
+    
+    public int getSpinnerValue()
     {
-        submitNamesButton.addActionListener(e -> {
-            for(JTextField field : playerNameFields)
-            {
-                String playerName = field.getText();  // Get text from the text field
-                if (!playerName.trim().isEmpty()) {  // Check if the name is not empty
-                    names.add(playerName);  // Add the name to the ArrayList
-                }
-                System.out.println("Player Names: " + names);
-            }
-            ActualPlayer.initializePlayers(names);
-        });
+        return (int) spinner.getValue();
     }
     
-    
-    public int getNumberOfPlayers()
+    public ArrayList<JTextField> getNameFields()
     {
-        return numberOfPlayers;
+        return nameFields;
     }
-    
-    public void createPlayerNameFields(int numberOfPlayers) {
-    playerNames.removeAll();  // Clear existing fields
-    playerNameFields.clear();
-
-    // Create text fields for player names
-    for (int i = 1; i <= numberOfPlayers; i++) {
-        JTextField playerNameField = new JTextField();
-        playerNameField.setPreferredSize(new Dimension(80, 30));
-        playerNames.add(new JLabel("Player " + i + " Name:"));
-        playerNames.add(playerNameField);
-        playerNameFields.add(playerNameField);  
-    }
-    
-    // Create the submit button for names
-    submitNamesButton = createButton("Submit Player Names");
-    playerNames.add(submitNamesButton);
-
-    // Add the action listener to the button
-    clickSubmitNameButton();
-
-    // Refresh the panel to show updated fields
-    playerNames.revalidate();
-    playerNames.repaint();
-}
-    
-    
 }
