@@ -17,6 +17,7 @@ public class Model {
     private String rules;
     private int numOfPlayers = 0;
     private ArrayList<String> playerNames;
+    //private ArrayList<ActualPlayer> players;
 
     public Model()
     {
@@ -63,6 +64,9 @@ public class Model {
 
     public void setPlayerNames(ArrayList<String> names)
     {
+        playerNames.clear();
         this.playerNames = names;
     }
+    
+    
 }

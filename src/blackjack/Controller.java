@@ -8,6 +8,7 @@ package blackjack;
  *
  * @author daniel
  */
+
 import java.util.ArrayList;
 import javax.swing.JTextField;
 
@@ -45,6 +46,7 @@ public class Controller {
     private void showBlackjack()
     {
         view.switchToPanel(view.getBlackJackPanel());
+        
     }
     
     private void getNumPlayers()
@@ -73,4 +75,32 @@ public class Controller {
         showBlackjack();
         ActualPlayer.initializePlayers(playerNames);
     }
+    
+    /*public void collectBets() collect the bets of each player from gui the pass it back to get bet method in actual player.
+    That method will need adjusting
+    {
+        ArrayList<Integer> bets = new ArrayList<>();
+        ArrayList<String> playerNames = model.getPlayerNames();
+
+        if (playerNames != null)
+        {
+            for (String playerName : playerNames)
+            {
+                ActualPlayer player = ... // Retrieve the player object associated with playerName
+                int bet = view.getBetFromPlayer(playerName, player.getBalance());
+                
+                if (bet > 0)
+                {
+                    bets.add(bet); // Store the valid bet
+                    model.validateAndSetBet(player, bet); // Validate and set the bet for the player
+                } 
+                else
+                {
+                    // Handle the case where the user canceled or entered an invalid bet
+                    // e.g., notify the player or set a default bet
+                }
+            }
+        }
+    }*/
+    
 }
