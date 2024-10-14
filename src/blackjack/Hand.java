@@ -49,4 +49,8 @@ public class Hand
     public String toString() {
         return cards.toString();
     }
+    
+     public List<Card> getCards() { // return the list of cards
+        return new ArrayList<>(cards); // Return a copy of the list to avoid external modifications
+    }
 }

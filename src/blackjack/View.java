@@ -10,6 +10,7 @@ package blackjack;
  */
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
@@ -17,6 +18,7 @@ import java.awt.GridBagConstraints;
 import java.awt.GridLayout;
 import java.awt.Image;
 import java.util.ArrayList;
+import java.util.List;
 import javax.swing.*;
 
 
@@ -27,6 +29,7 @@ public class View extends JFrame {
     private JPanel rulesPanel;
     private JPanel playPanel;
     private JPanel blackJackPanel;
+    private JPanel betPanel;
     
     private JButton submitButton;
     private JButton statsButton;
@@ -37,16 +40,26 @@ public class View extends JFrame {
     private JButton hitButton;
     private JButton stayButton;
     private JButton doubleDownButton;
+    private JButton betButton;
+    
+    private int currentPlayerIndex = 0; // Index to track which player's turn it is
+    private JTextField betField = new JTextField();
+    private JLabel playerPromptLabel = new JLabel(); // To display the current player's name
+    private List<Integer> bets = new ArrayList<>(); // Store bets in sequence
             
-    private GridBagConstraints gbc = new GridBagConstraints();
     private JTextArea rulesTextArea;
     private ArrayList<JTextField> nameFields;
+    ArrayList<JLabel> playerBalanceLabels = new ArrayList<>();
+   
     
     private Model model;
+    private Controller controller;
     
     
     private JSpinner spinner;
     private String spacing = " ";
+    
+    private boolean betsComplete = false;
      
     public View(Model model)
     {
@@ -60,12 +73,17 @@ public class View extends JFrame {
         setVisible(true);
         
     }
+    public void setController(Controller controller)
+    {
+        this.controller = controller;
+    }
     
     private void initializeComponents() {
         welcomePanel = welcomePanel();
         rulesPanel = rulesPanel();
         statsPanel = statsPanel();
         playPanel = playPanel();
+        //betPanel = betPanel();
         //blackJackPanel = blackJackPanel(); 
     }
     
@@ -223,9 +241,9 @@ public class View extends JFrame {
         headerPanel.setBackground(new Color(53, 101, 77));
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
         buttonPanel.setBackground(new Color(53, 101, 77));
-        JPanel playersPanel = new JPanel(new FlowLayout(FlowLayout.CENTER,10,0)); // Center align player names
+        JPanel playersPanel = new JPanel();
         playersPanel.setBackground(new Color(53, 101, 77));
-        
+
         
         JPanel dealerPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
         dealerPanel.setBackground(new Color(53, 101, 77));
@@ -247,9 +265,85 @@ public class View extends JFrame {
         dealerLabel.setForeground(Color.WHITE);
         dealerLabel.setFont(dealerLabel.getFont().deriveFont(Font.BOLD));
         dealerPanel.add(dealerLabel);
+
+        backButton = createButton("Back to Home");
+        centerPanel.add(dealerPanel); // Add dealer panel first
+        centerPanel.add(spacerPanel());
+        centerPanel.add(spacerPanel());
+    
+        createPlayerPanels(playersPanel);
+        centerPanel.add(playersPanel);
         
+        headerPanel.add(backButton);
+        mainPanel.add(headerPanel, BorderLayout.NORTH);
+        mainPanel.add(centerPanel,BorderLayout.CENTER);
+        mainPanel.add(buttonPanel, BorderLayout.PAGE_END);
         
+        mainPanel.revalidate(); // Refresh the layout
+        mainPanel.repaint();
+        clickBacktoHomeButton(welcomePanel);
+        return mainPanel;
+    }
+    
+    private JPanel betPanel()
+    {
+        JPanel mainPanel = new JPanel(new BorderLayout());
+        mainPanel.setBackground(new Color(53, 101, 77));
+        JPanel headerPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        headerPanel.setBackground(new Color(53, 101, 77));
+        JPanel playersPanel = new JPanel();
+        playersPanel.setBackground(new Color(53, 101, 77));
+        
+        JPanel placeBets = new JPanel();
+        placeBets.setLayout(new BoxLayout(placeBets, BoxLayout.Y_AXIS));
+        //betPanel.setLayout(new FlowLayout(FlowLayout.CENTER));
+        placeBets.setBackground(new Color(53, 101, 77));
+        
+        JPanel centerPanel = new JPanel();
+        centerPanel.setLayout(new BoxLayout(centerPanel, BoxLayout.Y_AXIS)); // Stack vertically
+        centerPanel.setBackground(new Color(53, 101, 77));
+        // Add label to show current player's turn
+        playerPromptLabel.setForeground(Color.WHITE);
+        playerPromptLabel.setFont(playerPromptLabel.getFont().deriveFont(Font.BOLD));
+        playerPromptLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        placeBets.add(playerPromptLabel);
+    
+        // Add the bet input field
+        betField.setMaximumSize(new Dimension(100, 30)); // Adjust dimensions as needed
+        betField.setAlignmentX(Component.CENTER_ALIGNMENT); // Center the field
+        placeBets.add(Box.createVerticalStrut(10));
+        placeBets.add(betField);
+    
+        // Add button to submit bet
+        betButton = createButton("Submit Bet");
+        betButton.setAlignmentX(Component.CENTER_ALIGNMENT); // Center the button
+        placeBets.add(Box.createVerticalStrut(10));
+        betButton.addActionListener(e -> submitBet());
+        placeBets.add(betButton);
+        
+        createPlayerPanels(playersPanel);
+        centerPanel.add(spacerPanel());
+        centerPanel.add(placeBets);
+        centerPanel.add(spacerPanel());
+        centerPanel.add(playersPanel);
+        backButton = createButton("Back to Home");
+        headerPanel.add(backButton);
+        
+        mainPanel.add(headerPanel, BorderLayout.NORTH);
+        mainPanel.add(centerPanel,BorderLayout.CENTER);
+        //mainPanel.add(buttonPanel, BorderLayout.PAGE_END);
+        
+        initializeBettingCycle();
+        return mainPanel;  
+          
+    }
+    
+    private void createPlayerPanels(JPanel playersPanel)
+    {
         ArrayList<String> playerNames = model.getPlayerNames();
+        List<ActualPlayer> players = Controller.players;
+        
+        System.out.println("Creating player panels...");
         if(playerNames!=null)
         {
             int numPlayers = playerNames.size();
@@ -263,56 +357,88 @@ public class View extends JFrame {
             int availableSpace = totalWidth - totalNameWidth;
             int spaceBetween = availableSpace / (numPlayers + 1); // +1 for space on each end
             
-            playersPanel.add(Box.createHorizontalStrut(spaceBetween));
-            for (String playerName : playerNames)
+            playersPanel.removeAll();  // Ensure we start with a clean panel
+            playersPanel.setLayout(new GridLayout(1, numPlayers, 10, 0)); // 1 row// numPlayers columsn// 10pixel horizontal gap
+            
+            //playersPanel.add(Box.createHorizontalStrut(spaceBetween));
+            
+            for(int i = 0; i< numPlayers; i++)
             {
+                String playerName = playerNames.get(i);
+                ActualPlayer player = players.get(i); // Get the corresponding ActualPlayer
+                int balance = player.getBalance();
                 
                 JPanel playerPanel = new JPanel();
                 playerPanel.setLayout(new BoxLayout(playerPanel, BoxLayout.Y_AXIS)); // Stack name and cards
                 playerPanel.setBackground(new Color(53, 101, 77));
+
+                playerPanel.setMinimumSize(new Dimension(100, 80)); // Minimum width of 100 pixels
+                playerPanel.setPreferredSize(new Dimension(120, 80));
+                if(betsComplete)
+                {
+                    List<Card> cards = player.getHand().getCards(); // Get the player's cards
+                    System.out.println(playerNames.get(i) + " has " + (cards != null ? cards.size() : 0) + " cards.");
+                    for (Card card : cards)
+                    {
+                        JLabel cardLabel = new JLabel(card.toString()); // Assuming Card has a toString method to display it
+                        cardLabel.setForeground(Color.WHITE);
+                        cardLabel.setFont(cardLabel.getFont().deriveFont(Font.BOLD));
+                        cardLabel.setAlignmentX(Component.CENTER_ALIGNMENT); // Center card label
+                        playerPanel.add(cardLabel);
+                        System.out.println("displaying " + card.toString());
+                    }                    
+                }
                 
                 JLabel nameLabel = new JLabel(playerName);
                 nameLabel.setForeground(Color.WHITE);
                 nameLabel.setFont(nameLabel.getFont().deriveFont(Font.BOLD));
                 nameLabel.setHorizontalAlignment(SwingConstants.CENTER);
-                playerPanel.add(nameLabel); // Add name to player panel
+                nameLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+                //nameLabel.setBorder(BorderFactory.createEmptyBorder(5, 0, 5, 0));
+                playerPanel.add(nameLabel);
                 
-                /*JPanel cardsPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));// For showing the player cards
-                cardsPanel.setBackground(new Color(53, 101, 77));
-            
-                // Assuming you have a method to get cards for each player
-                ArrayList<Card> playerCards = ActualPlayer.getPlayerCards(playerName); // Replace with your method
-                for (Card card : playerCards)
-                {
-                    JLabel cardLabel = new JLabel(card.toString()); // Use appropriate card representation
-                    cardLabel.setForeground(Color.WHITE);
-                    cardsPanel.add(cardLabel); // Add each card label to the cardsPanel
-                }
+                JLabel balanceLabel = new JLabel("$" + balance);
+                balanceLabel.setForeground(Color.WHITE);
+                balanceLabel.setHorizontalAlignment(SwingConstants.CENTER);
+                balanceLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+                //balanceLabel.setBorder(BorderFactory.createEmptyBorder(3, 0, 0, 0));
+                playerPanel.add(balanceLabel);
                 
-                    playerPanel.add(cardsPanel);*/
-                    playersPanel.add(playerPanel);
-                    playersPanel.add(Box.createHorizontalStrut(spaceBetween));
-
+               
+                playersPanel.add(playerPanel);
+                //playersPanel.add(Box.createHorizontalStrut(spaceBetween));     
             } 
         }
+        playersPanel.revalidate();
+        playersPanel.repaint();
         
-        backButton = createButton("Back to Home");
-        
-        centerPanel.add(dealerPanel); // Add dealer panel first
-        centerPanel.add(spacerPanel());
-        centerPanel.add(spacerPanel());
-        centerPanel.add(spacerPanel());
-        centerPanel.add(playersPanel);
-        
-        headerPanel.add(backButton);
-        mainPanel.add(headerPanel, BorderLayout.NORTH);
-        mainPanel.add(centerPanel,BorderLayout.CENTER);
-        mainPanel.add(buttonPanel, BorderLayout.PAGE_END);
-        mainPanel.revalidate(); // Refresh the layout
-        mainPanel.repaint();
-        clickBacktoHomeButton(welcomePanel);
-        return mainPanel;
     }
+    
+    /*private JPanel createCardsPanel(List<Card> cards)
+    {
+        JPanel cardsPanel = new JPanel();
+        cardsPanel.setLayout(new FlowLayout(FlowLayout.CENTER));
+        cardsPanel.setBackground(new Color(53, 101, 77));
+        if (cards == null)
+        {
+            System.out.println("Cards are null");
+        }
+        else
+        {
+            System.out.println("Number of cards: " + cards.size());
+            for (Card card : cards)
+            {
+                JLabel cardLabel = new JLabel(card.toString()); // Assuming Card has a toString method to display it
+                cardLabel.setForeground(Color.WHITE);
+                cardLabel.setFont(cardLabel.getFont().deriveFont(Font.BOLD));
+                cardsPanel.add(cardLabel);
+                System.out.println("displaying " + card.toString());
+            }
+        }
+        cardsPanel.revalidate();
+        cardsPanel.repaint();
+        return cardsPanel;
+    }*/
     
     private JLabel createLabel(String text, int fontSize, Color color) {
         JLabel label = new JLabel(text, JLabel.CENTER);
@@ -418,8 +544,16 @@ public class View extends JFrame {
     
     JPanel getBlackJackPanel()
     {
+        //betPanel = betPanel();
         blackJackPanel = blackJackPanel(); 
+        
         return blackJackPanel;
+    }
+    
+     JPanel getBetPanel()
+    {
+        betPanel = betPanel();
+        return betPanel;
     }
     
     public void setRulesText(String rules)
@@ -454,13 +588,71 @@ public class View extends JFrame {
     
     private void resetGameState()
     {
-
         nameFields.clear();
+        betPanel.removeAll();
         blackJackPanel.removeAll(); 
-    
         // Optionally reset other game-related components or variables here, like scores or game state
     
         // Rebuild the Blackjack panel UI
+        betPanel = betPanel();
         blackJackPanel = blackJackPanel();  // Reinitialize the Blackjack panel
     }
+    
+    private void initializeBettingCycle()
+    {
+        currentPlayerIndex = 0;
+        promptNextPlayer(); // Prompt the first player
+      
+    }
+
+    private void promptNextPlayer()
+    {
+        if(currentPlayerIndex < model.getNumOfPlayers())
+        {
+            String currentPlayerName = model.getPlayerNames().get(currentPlayerIndex);
+            playerPromptLabel.setText(currentPlayerName + ", enter your bet: ");
+            betField.setText(""); // Clear the previous input
+            betField.requestFocus();
+        }
+        else
+        {
+            System.out.println("All bets collected. Proceed with the game.");// debugger
+
+            System.out.println("Removed components from betPanel.");
+            betPanel.revalidate();
+            betPanel.repaint();
+            
+            currentPlayerIndex = 0;
+            betsComplete = true;
+ 
+            blackJackPanel = blackJackPanel();
+            switchToPanel(blackJackPanel);
+            betsComplete = false;  
+        }
+        
+    }
+    
+    private void submitBet()
+    {
+        String betInput = betField.getText();
+        int betAmount;
+        try
+        {
+            betAmount = Integer.parseInt(betInput);
+
+            // Ask the controller to handle the bet logic
+            if (controller.processBet(currentPlayerIndex, betAmount))
+            {
+                currentPlayerIndex++; // Move to the next player
+                promptNextPlayer();   // Prompt the next player
+            } else
+            {
+                JOptionPane.showMessageDialog(null, "Invalid bet amount. Try again.");
+            }
+        }   catch (NumberFormatException e)
+            {
+                JOptionPane.showMessageDialog(null, "Invalid input. Please enter a integer.");
+            }
+    }
+    
 }

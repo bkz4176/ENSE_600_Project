@@ -29,6 +29,11 @@ public class DataFile {
 
     public static void log(String data) // method to write game log to file
     { 
+         if (writer == null)
+         {
+            System.out.println("Logger has not been initialized. Call createFile() first.");
+            return;
+        }
         try {
             writer.write(data);
             writer.newLine();

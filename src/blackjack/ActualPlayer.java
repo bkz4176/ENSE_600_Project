@@ -14,6 +14,7 @@ public class ActualPlayer extends Player {
     static Scanner scanner = new Scanner(System.in);
     private int betAmount;
     private boolean firstTurn;
+    List<ActualPlayer> players = new ArrayList<>();
 
     public ActualPlayer(String name) // constructor for initilizing a new player.
     {
@@ -36,7 +37,7 @@ public class ActualPlayer extends Player {
         
         String space = " ";
         String width = space.repeat(11)+"* ";
-        System.out.print(width+"Enter the number of players(1-7): ");
+        //System.out.print(width+"Enter the number of players(1-7): ");
         Map<String, Integer> existingPlayerInfo = DataFile.readPlayerInfo("Player_Info.txt");
   
         
@@ -54,12 +55,14 @@ public class ActualPlayer extends Player {
                 {
                     System.out.println(width + "Welcome back, " + s + "! Your balance has been loaded");
                     players.add(new ActualPlayer(s, balance));
+                    System.out.println(s + " balance = "+ balance);
                 }    
             }
             else
             {
                 players.add(new ActualPlayer(s));
                 System.out.println(width + "Welcome " + s);
+                //System.out.println(s + " balance = "+ s.);
             }
         }
         DataFile.log(""); 

@@ -10,12 +10,17 @@ package blackjack;
  */
 
 import java.util.ArrayList;
+import java.util.List;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
 import javax.swing.JTextField;
 
 public class Controller {
     private View view;
     private Model model;
+    public static List<ActualPlayer> players;
 
+    
     public Controller(View view, Model model) {
         this.view = view;
         this.model = model;
@@ -49,6 +54,17 @@ public class Controller {
         
     }
     
+    private void showBetPanel()
+    {
+        JPanel betPanel = view.getBetPanel();
+        if (betPanel == null) {
+    System.out.println("Error: betPanel is null!");
+} else {
+    System.out.println("betPanel is valid, switching to it.");
+}
+        view.switchToPanel(betPanel);
+    }
+    
     private void getNumPlayers()
     {
         int numberOfPlayers = view.getSpinnerValue();
@@ -72,35 +88,59 @@ public class Controller {
             System.out.println("Player "+x+": "+s); // debugger
             x++;
         }
-        showBlackjack();
-        ActualPlayer.initializePlayers(playerNames);
+        //showBlackjack();
+        //ActualPlayer.initializePlayers(playerNames);
+        BlackJack game = new BlackJack();
+        players = ActualPlayer.initializePlayers(playerNames);
+        game.start();
+        showBetPanel();
+        //showBlackjack();
+        
+        
+        for (ActualPlayer p : players)
+        {
+            System.out.println("Debugger: " + p.getName() + ", Balance: " + p.getBalance());
+        }
+        //game.start();
+        
     }
     
-    /*public void collectBets() collect the bets of each player from gui the pass it back to get bet method in actual player.
-    That method will need adjusting
+    public boolean processBet(int playerIndex, int betAmount)
     {
-        ArrayList<Integer> bets = new ArrayList<>();
-        ArrayList<String> playerNames = model.getPlayerNames();
+        // Get the player object based on the index
+        ActualPlayer currentPlayer = players.get(playerIndex);
 
-        if (playerNames != null)
+        // Validate the bet
+        if (betAmount <= 0 || betAmount > currentPlayer.getBalance())
         {
-            for (String playerName : playerNames)
-            {
-                ActualPlayer player = ... // Retrieve the player object associated with playerName
-                int bet = view.getBetFromPlayer(playerName, player.getBalance());
-                
-                if (bet > 0)
-                {
-                    bets.add(bet); // Store the valid bet
-                    model.validateAndSetBet(player, bet); // Validate and set the bet for the player
-                } 
-                else
-                {
-                    // Handle the case where the user canceled or entered an invalid bet
-                    // e.g., notify the player or set a default bet
-                }
-            }
+            return false; // Invalid bet
         }
-    }*/
+
+        // Save the bet
+        currentPlayer.getBankAccount().placeBet(betAmount);
+
+        // Optionally log or print the bet for debugging
+        System.out.println(currentPlayer.getName() + " placed a bet of $" + betAmount);
+        //updateBalanceLabel(playerIndex);
+
+        return true; // Bet was successful
+    }
+    
+    private void updateBalanceLabel(int playerIndex)
+    {
+        // Get the player object
+        ActualPlayer currentPlayer = players.get(playerIndex);
+
+        // Find the JLabel associated with this player (ensure you have a way to map playerIndex to JLabel)
+        JLabel balanceLabel = view.playerBalanceLabels.get(playerIndex); // Assuming you have a list of JLabels for balance
+
+        // Update the label text to reflect the new balance
+        balanceLabel.setText("$" + currentPlayer.getBalance());
+
+        // Optionally revalidate and repaint the panel if needed
+        balanceLabel.revalidate();
+        balanceLabel.repaint();
+    }
+    
     
 }

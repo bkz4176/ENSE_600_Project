@@ -22,15 +22,16 @@ public class BlackJack {
     }
 
     public void start() {
-
-        DataFile.playerInfo(players, "Player_Info.txt");
+        
+        DataFile.playerInfo(Controller.players, "Player_Info.txt"); // this is now working correctly. Names and balances get saved c
         deck.shuffle(); // shuffle deck at the start of each game.
-        for(ActualPlayer p : players)
+        
+        /*for(ActualPlayer p : Controller.players)
         {
             p.getBet(); // get bets for each player   
-        }
+        }*/
 
-        for(ActualPlayer p : players) // adding cards to each players hand
+        for(ActualPlayer p : Controller.players) // adding cards to each players hand
         {
             p.addCardToHand(deck.drawCard());
             p.addCardToHand(deck.drawCard());
@@ -40,7 +41,7 @@ public class BlackJack {
         
         DataFile.log("\nThe The Game is Starting\n");
 
-        dealer.dealerInitialCard(); // show dealers face up card
+        /*dealer.dealerInitialCard(); // show dealers face up card
         
         for(ActualPlayer p : players) // Player's turn
         {
@@ -59,26 +60,14 @@ public class BlackJack {
         {
             p.clearHand();
         }
-        dealer.clearHand(); 
+        dealer.clearHand(); */
     }
 
     public static void main(String[] args) {
        
-
         Model model = new Model();
         View view = new View(model);
         Controller controller = new Controller(view, model);
-        try (scanner) {
-            BlackJack game = new BlackJack();
-      
-            //players = ActualPlayer.initializePlayers();
-            while(!players.isEmpty())
-            {  
-                game.start();
-            }
-        }
-        DataFile.log("\nGame over. All players are out");
-        
+        view.setController(controller);
     }
-    
 }
