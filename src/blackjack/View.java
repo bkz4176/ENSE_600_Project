@@ -11,16 +11,19 @@ package blackjack;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
-import java.awt.GridBagConstraints;
 import java.awt.GridLayout;
 import java.awt.Image;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.List;
 import javax.swing.*;
-
+import javax.swing.border.Border;
+import javax.swing.border.LineBorder;
 
 public class View extends JFrame {
     
@@ -30,6 +33,9 @@ public class View extends JFrame {
     private JPanel playPanel;
     private JPanel blackJackPanel;
     private JPanel betPanel;
+    private JPanel playersPanel;
+    private JPanel centerPanel;
+    private JPanel dealerPanel;
     
     private JButton submitButton;
     private JButton statsButton;
@@ -49,15 +55,15 @@ public class View extends JFrame {
             
     private JTextArea rulesTextArea;
     private ArrayList<JTextField> nameFields;
-    ArrayList<JLabel> playerBalanceLabels = new ArrayList<>();
+    //ArrayList<JLabel> playerBalanceLabels = new ArrayList<>();
    
     
-    private Model model;
+    private final Model model;
     private Controller controller;
     
     
     private JSpinner spinner;
-    private String spacing = " ";
+    private final String spacing = " ";
     
     private boolean betsComplete = false;
      
@@ -83,8 +89,10 @@ public class View extends JFrame {
         rulesPanel = rulesPanel();
         statsPanel = statsPanel();
         playPanel = playPanel();
-        //betPanel = betPanel();
-        //blackJackPanel = blackJackPanel(); 
+        hitButton = createButton("Hit");
+        stayButton = createButton("Stay");
+        doubleDownButton = createButton("Double Down");
+        
     }
     
     private JPanel welcomePanel()
@@ -233,65 +241,13 @@ public class View extends JFrame {
         clickBackButton(playPanel);
     }
     
-    private JPanel blackJackPanel()
-    {
-        JPanel mainPanel = new JPanel(new BorderLayout());
-        mainPanel.setBackground(new Color(53, 101, 77));
-        JPanel headerPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        headerPanel.setBackground(new Color(53, 101, 77));
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
-        buttonPanel.setBackground(new Color(53, 101, 77));
-        JPanel playersPanel = new JPanel();
-        playersPanel.setBackground(new Color(53, 101, 77));
-
-        
-        JPanel dealerPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
-        dealerPanel.setBackground(new Color(53, 101, 77));
-        
-        JPanel centerPanel = new JPanel();
-        centerPanel.setLayout(new BoxLayout(centerPanel, BoxLayout.Y_AXIS)); // Stack vertically
-        centerPanel.setBackground(new Color(53, 101, 77));
-        
-        hitButton = createButton("Hit");
-        stayButton = createButton("Stay");
-        doubleDownButton = createButton("Double Down");
-        
-        buttonPanel.add(hitButton);
-        buttonPanel.add(stayButton);
-        buttonPanel.add(doubleDownButton);
-        
-        String dealer = "Dealer";
-        JLabel dealerLabel = new JLabel(dealer);
-        dealerLabel.setForeground(Color.WHITE);
-        dealerLabel.setFont(dealerLabel.getFont().deriveFont(Font.BOLD));
-        dealerPanel.add(dealerLabel);
-
-        backButton = createButton("Back to Home");
-        centerPanel.add(dealerPanel); // Add dealer panel first
-        centerPanel.add(spacerPanel());
-        centerPanel.add(spacerPanel());
-    
-        createPlayerPanels(playersPanel);
-        centerPanel.add(playersPanel);
-        
-        headerPanel.add(backButton);
-        mainPanel.add(headerPanel, BorderLayout.NORTH);
-        mainPanel.add(centerPanel,BorderLayout.CENTER);
-        mainPanel.add(buttonPanel, BorderLayout.PAGE_END);
-        
-        mainPanel.revalidate(); // Refresh the layout
-        mainPanel.repaint();
-        clickBacktoHomeButton(welcomePanel);
-        return mainPanel;
-    }
-    
     private JPanel betPanel()
     {
         JPanel mainPanel = new JPanel(new BorderLayout());
         mainPanel.setBackground(new Color(53, 101, 77));
         JPanel headerPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         headerPanel.setBackground(new Color(53, 101, 77));
-        JPanel playersPanel = new JPanel();
+        playersPanel = new JPanel();
         playersPanel.setBackground(new Color(53, 101, 77));
         
         JPanel placeBets = new JPanel();
@@ -321,7 +277,7 @@ public class View extends JFrame {
         betButton.addActionListener(e -> submitBet());
         placeBets.add(betButton);
         
-        createPlayerPanels(playersPanel);
+        updatePlayerPanels(playersPanel);
         centerPanel.add(spacerPanel());
         centerPanel.add(placeBets);
         centerPanel.add(spacerPanel());
@@ -338,7 +294,91 @@ public class View extends JFrame {
           
     }
     
-    private void createPlayerPanels(JPanel playersPanel)
+    private JPanel blackJackPanel()
+    {
+        JPanel mainPanel = new JPanel(new BorderLayout());
+        mainPanel.setBackground(new Color(53, 101, 77));
+        JPanel headerPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        headerPanel.setBackground(new Color(53, 101, 77));
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        buttonPanel.setBackground(new Color(53, 101, 77));
+        //JPanel playersPanel = new JPanel();
+        playersPanel.setBackground(new Color(53, 101, 77));
+
+        dealerPanel = new JPanel();
+        dealerPanel.setLayout(new BoxLayout(dealerPanel, BoxLayout.Y_AXIS));
+        dealerPanel.setBackground(new Color(53, 101, 77));
+        
+        centerPanel = new JPanel();
+        centerPanel.setLayout(new BoxLayout(centerPanel, BoxLayout.Y_AXIS)); // Stack vertically
+        centerPanel.setBackground(new Color(53, 101, 77));
+        
+        //hitButton = createButton("Hit");
+        //stayButton = createButton("Stay");
+        //doubleDownButton = createButton("Double Down");
+        
+        buttonPanel.add(hitButton);
+        buttonPanel.add(stayButton);
+        buttonPanel.add(doubleDownButton);
+        
+        updateDealerPanel(dealerPanel, controller);
+        
+        backButton = createButton("Back to Home");
+        centerPanel.add(dealerPanel); // Add dealer panel first
+        centerPanel.add(spacerPanel());
+        centerPanel.add(spacerPanel());
+        centerPanel.add(spacerPanel());
+    
+        updatePlayerPanels(playersPanel);
+        centerPanel.add(playersPanel);
+        
+        headerPanel.add(backButton);
+        
+        mainPanel.add(headerPanel, BorderLayout.NORTH);
+        mainPanel.add(centerPanel,BorderLayout.CENTER);
+        mainPanel.add(buttonPanel, BorderLayout.PAGE_END);
+        
+        mainPanel.revalidate(); // Refresh the layout
+        mainPanel.repaint();
+        clickBacktoHomeButton(welcomePanel);
+        return mainPanel;
+    }
+    
+    private void updateDealerPanel(JPanel dealerPanel, Controller controller)
+    {
+        dealerPanel.removeAll(); // Clear previous content
+        String dealer = "Dealer";
+        JLabel dealerLabel = new JLabel(dealer);
+        dealerLabel.setForeground(Color.WHITE);
+        dealerLabel.setFont(dealerLabel.getFont().deriveFont(Font.BOLD));
+        dealerLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        dealerPanel.add(dealerLabel);
+        
+        Dealer dealerObj = controller.getDealer();
+        List<Card> dealerCards = dealerObj.getHand().getCards();
+
+        if (dealerCards != null && !dealerCards.isEmpty())
+        {
+            for (Card card : dealerCards)
+            {
+                JLabel cardLabel = new JLabel(card.toString());
+                cardLabel.setForeground(Color.WHITE);
+                cardLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+                dealerPanel.add(cardLabel);
+            }
+        } 
+        else
+        {
+            JLabel noCardsLabel = new JLabel("Dealer has no cards yet.");
+            noCardsLabel.setForeground(Color.WHITE);
+            dealerPanel.add(noCardsLabel);
+        }
+
+        dealerPanel.revalidate();
+        dealerPanel.repaint();
+    }
+    
+    private void updatePlayerPanels(JPanel playersPanel)
     {
         ArrayList<String> playerNames = model.getPlayerNames();
         List<ActualPlayer> players = Controller.players;
@@ -353,14 +393,13 @@ public class View extends JFrame {
             {
                 totalNameWidth += playerName.length() * 10; // Approximate width per character
             }
-            
             int availableSpace = totalWidth - totalNameWidth;
             int spaceBetween = availableSpace / (numPlayers + 1); // +1 for space on each end
             
             playersPanel.removeAll();  // Ensure we start with a clean panel
             playersPanel.setLayout(new GridLayout(1, numPlayers, 10, 0)); // 1 row// numPlayers columsn// 10pixel horizontal gap
-            
-            //playersPanel.add(Box.createHorizontalStrut(spaceBetween));
+            Border normalBorder = new LineBorder(new Color(53, 101, 77), 2);
+            Border turnBorder = new LineBorder(Color.YELLOW, 3);
             
             for(int i = 0; i< numPlayers; i++)
             {
@@ -371,7 +410,17 @@ public class View extends JFrame {
                 JPanel playerPanel = new JPanel();
                 playerPanel.setLayout(new BoxLayout(playerPanel, BoxLayout.Y_AXIS)); // Stack name and cards
                 playerPanel.setBackground(new Color(53, 101, 77));
-
+                if(betsComplete)
+                {
+                    if (i == controller.getPlayerIndex())
+                    { // playerIndex is the current player's index
+                        playerPanel.setBorder(turnBorder); // Yellow border for current turn
+                    }    
+                    else
+                    {
+                        playerPanel.setBorder(normalBorder); // Normal gray border
+                    }
+                }
                 playerPanel.setMinimumSize(new Dimension(100, 80)); // Minimum width of 100 pixels
                 playerPanel.setPreferredSize(new Dimension(120, 80));
                 if(betsComplete)
@@ -394,51 +443,21 @@ public class View extends JFrame {
                 nameLabel.setFont(nameLabel.getFont().deriveFont(Font.BOLD));
                 nameLabel.setHorizontalAlignment(SwingConstants.CENTER);
                 nameLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-                //nameLabel.setBorder(BorderFactory.createEmptyBorder(5, 0, 5, 0));
                 playerPanel.add(nameLabel);
                 
                 JLabel balanceLabel = new JLabel("$" + balance);
                 balanceLabel.setForeground(Color.WHITE);
                 balanceLabel.setHorizontalAlignment(SwingConstants.CENTER);
                 balanceLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-                //balanceLabel.setBorder(BorderFactory.createEmptyBorder(3, 0, 0, 0));
                 playerPanel.add(balanceLabel);
                 
-               
-                playersPanel.add(playerPanel);
-                //playersPanel.add(Box.createHorizontalStrut(spaceBetween));     
+                playersPanel.add(playerPanel);   
             } 
         }
         playersPanel.revalidate();
         playersPanel.repaint();
         
     }
-    
-    /*private JPanel createCardsPanel(List<Card> cards)
-    {
-        JPanel cardsPanel = new JPanel();
-        cardsPanel.setLayout(new FlowLayout(FlowLayout.CENTER));
-        cardsPanel.setBackground(new Color(53, 101, 77));
-        if (cards == null)
-        {
-            System.out.println("Cards are null");
-        }
-        else
-        {
-            System.out.println("Number of cards: " + cards.size());
-            for (Card card : cards)
-            {
-                JLabel cardLabel = new JLabel(card.toString()); // Assuming Card has a toString method to display it
-                cardLabel.setForeground(Color.WHITE);
-                cardLabel.setFont(cardLabel.getFont().deriveFont(Font.BOLD));
-                cardsPanel.add(cardLabel);
-                System.out.println("displaying " + card.toString());
-            }
-        }
-        cardsPanel.revalidate();
-        cardsPanel.repaint();
-        return cardsPanel;
-    }*/
     
     private JLabel createLabel(String text, int fontSize, Color color) {
         JLabel label = new JLabel(text, JLabel.CENTER);
@@ -555,6 +574,33 @@ public class View extends JFrame {
         betPanel = betPanel();
         return betPanel;
     }
+    public JPanel getPlayersPanel()
+    {
+        return playersPanel;
+    }
+    public JPanel getDealerPanel()
+    {
+        return dealerPanel;
+    }
+    
+    public void refreshPlayerPanels(JPanel playersPanel)
+    {
+        playersPanel.removeAll();
+        updatePlayerPanels(playersPanel);
+        centerPanel.revalidate(); // Refresh the layout of the centerPanel
+        centerPanel.repaint(); 
+        blackJackPanel.revalidate();
+        blackJackPanel.repaint();
+    }
+    public void refreshDealerPanel(JPanel dealerPanel, Controller controller)
+    {
+        dealerPanel.removeAll();
+        updateDealerPanel(dealerPanel, controller);
+        centerPanel.revalidate(); // Refresh the layout of the centerPanel
+        centerPanel.repaint(); 
+        blackJackPanel.revalidate();
+        blackJackPanel.repaint();   
+    }
     
     public void setRulesText(String rules)
     {
@@ -589,6 +635,7 @@ public class View extends JFrame {
     private void resetGameState()
     {
         nameFields.clear();
+        model.getDealer().clearHand();
         betPanel.removeAll();
         blackJackPanel.removeAll(); 
         // Optionally reset other game-related components or variables here, like scores or game state
@@ -627,9 +674,8 @@ public class View extends JFrame {
  
             blackJackPanel = blackJackPanel();
             switchToPanel(blackJackPanel);
-            betsComplete = false;  
-        }
-        
+            //betsComplete = false;  
+        }   
     }
     
     private void submitBet()
@@ -653,6 +699,53 @@ public class View extends JFrame {
             {
                 JOptionPane.showMessageDialog(null, "Invalid input. Please enter a integer.");
             }
+    }
+    
+    public void showPlayerBust(ActualPlayer player)
+    {
+        String message = player.getName() + " has busted!";
+        JOptionPane optionPane = new JOptionPane(message, JOptionPane.INFORMATION_MESSAGE);
+        JDialog dialog = optionPane.createDialog("Player Bust");
+        dialog.setModal(false);
+        
+        Timer showDialogTimer = new Timer(500, new ActionListener() {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            dialog.setVisible(true);
+            
+            // Create another timer to close the dialog after 1 second
+            Timer closeDialogTimer = new Timer(1000, new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    dialog.dispose(); // Close the dialog
+                }
+            });
+            closeDialogTimer.setRepeats(false); // Ensure this timer only runs once
+            closeDialogTimer.start(); // Start the timer to close the dialog
+        }
+        });
+        showDialogTimer.setRepeats(false); // Ensure this timer only runs once
+        showDialogTimer.start();
+    }
+    
+    public void showDealerBustMessage()
+    {
+        String message = "Dealer has busted!";
+        JOptionPane optionPane = new JOptionPane(message, JOptionPane.INFORMATION_MESSAGE);
+        JDialog dialog = optionPane.createDialog("Dealer Bust");
+
+        // Show the message dialog
+        dialog.setVisible(true);
+
+        // Automatically close the dialog after 1 second
+        Timer closeDialogTimer = new Timer(1000, new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+            dialog.dispose();
+            }
+        });
+        closeDialogTimer.setRepeats(false);
+        closeDialogTimer.start();
     }
     
 }

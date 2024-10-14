@@ -15,15 +15,19 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Model {
-    private String rules;
+    private final String rules;
     private int numOfPlayers = 0;
     private ArrayList<String> playerNames;
     private List<ActualPlayer> players;
+    private final Dealer dealer;
+    private Deck deck;
 
     public Model()
     {
         rules = loadRulesFromFile("Game_rules.txt");
         playerNames = new ArrayList<>();
+        dealer = new Dealer();
+        this.deck = new Deck();
     }
 
     private String loadRulesFromFile(String fileName)
@@ -79,10 +83,13 @@ public class Model {
     {
         return players;
     }
-    
-    
-    
-    
-    
-    
+    public Dealer getDealer()
+    {
+        return dealer;
+    }
+    public Deck getDeck()
+    {
+        return deck; // Getter for the deck
+    }
+  
 }

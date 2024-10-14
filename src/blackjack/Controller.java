@@ -9,16 +9,20 @@ package blackjack;
  * @author daniel
  */
 
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.List;
-import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
+import javax.swing.Timer;
 
 public class Controller {
     private View view;
     private Model model;
     public static List<ActualPlayer> players;
+    private int playerIndex = 0;
+    private boolean firstTurn = true;
 
     
     public Controller(View view, Model model) {
@@ -32,6 +36,9 @@ public class Controller {
             getNumPlayers();  
             view.getStartButton().addActionListener(e2 -> getPlayerNames());
         });
+        view.getHitButton().addActionListener(e -> handleHit());
+        view.getStayButton().addActionListener(e -> handleStay());
+        view.getDoubleDownButton().addActionListener(e -> handleDoubleDown());
     }
 
     private void showStats() {
@@ -57,11 +64,14 @@ public class Controller {
     private void showBetPanel()
     {
         JPanel betPanel = view.getBetPanel();
-        if (betPanel == null) {
-    System.out.println("Error: betPanel is null!");
-} else {
-    System.out.println("betPanel is valid, switching to it.");
-}
+        if (betPanel == null)
+        {
+            System.out.println("Error: betPanel is null!");
+        } 
+        else
+        {
+            System.out.println("betPanel is valid, switching to it.");
+        }
         view.switchToPanel(betPanel);
     }
     
@@ -90,12 +100,10 @@ public class Controller {
         }
         //showBlackjack();
         //ActualPlayer.initializePlayers(playerNames);
-        BlackJack game = new BlackJack();
+        BlackJack game = new BlackJack(model);
         players = ActualPlayer.initializePlayers(playerNames);
         game.start();
         showBetPanel();
-        //showBlackjack();
-        
         
         for (ActualPlayer p : players)
         {
@@ -103,6 +111,14 @@ public class Controller {
         }
         //game.start();
         
+    }
+    public int getPlayerIndex()
+    {
+        return playerIndex;
+    }
+    public void setPlayerIndex(int x)
+    {
+        this.playerIndex= x;
     }
     
     public boolean processBet(int playerIndex, int betAmount)
@@ -126,21 +142,136 @@ public class Controller {
         return true; // Bet was successful
     }
     
-    private void updateBalanceLabel(int playerIndex)
+    public Dealer getDealer()
     {
-        // Get the player object
-        ActualPlayer currentPlayer = players.get(playerIndex);
-
-        // Find the JLabel associated with this player (ensure you have a way to map playerIndex to JLabel)
-        JLabel balanceLabel = view.playerBalanceLabels.get(playerIndex); // Assuming you have a list of JLabels for balance
-
-        // Update the label text to reflect the new balance
-        balanceLabel.setText("$" + currentPlayer.getBalance());
-
-        // Optionally revalidate and repaint the panel if needed
-        balanceLabel.revalidate();
-        balanceLabel.repaint();
+        return model.getDealer();
     }
     
+    private void handleHit()
+    {
+        System.out.println("Player " + (playerIndex+1) + ": Hit");
+
+        //List<ActualPlayer> players = model.getPlayers();
+        System.out.println("Total players: " + players.size());
+        if (playerIndex < 0 || playerIndex >= players.size())
+        {
+            System.out.println("Invalid player index: " + playerIndex);
+            return; // Exit early to avoid NullPointerException
+        }
+        
+        ActualPlayer currentPlayer = players.get(playerIndex);
+        
+        if (currentPlayer == null)
+        {
+            System.out.println("Current player is null at index: " + playerIndex);
+            return; // Exit if currentPlayer is null
+        }
+
+        // Ensure the deck is initialized and not null
+        if (model.getDeck() == null)
+        {
+            System.out.println("The deck is not initialized.");
+            return; // Exit if the deck is null
+        }
+
+        currentPlayer.addCardToHand(model.getDeck().drawCard());
+        System.out.println(currentPlayer + " " + currentPlayer.getHand().toString());
+        view.refreshPlayerPanels(view.getPlayersPanel());
+        checkPlayerStatus(currentPlayer); // Check if the player has busted
+    }
+    private void handleStay()
+    {
+
+        moveToNextPlayer();
+        
+    }
+    private void handleDoubleDown()
+    {
+        ActualPlayer currentPlayer = players.get(playerIndex);
+        int currentBet = currentPlayer.getBetAmount();
+        currentPlayer.getBankAccount().placeBet(currentBet);
+        
+        currentPlayer.addCardToHand(model.getDeck().drawCard());
+        firstTurn = false;
+        view.refreshPlayerPanels(view.getPlayersPanel());
+        checkPlayerStatus(currentPlayer);
+    }
+    
+    private void checkPlayerStatus(ActualPlayer player)
+    {
+        if (player.getHandValue() > 21)
+        {
+            // Handle player bust (e.g., notify the player, update UI)
+            view.showPlayerBust(player); 
+            Timer delayTimer = new Timer(1500, new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                moveToNextPlayer();
+            }
+        });
+        delayTimer.setRepeats(false); // Ensure the timer runs only once
+        delayTimer.start(); // Start the timer with a delay
+    
+        }
+        if(!firstTurn && player.getHandValue()<=21)
+        {
+            moveToNextPlayer();
+        }
+    }
+    
+    private void dealerPlay()
+    {
+        boolean notBusted = false;
+        // Dealer's turn if player hasn't busted
+        for(ActualPlayer p : players)
+        {
+            if(p.getHandValue()<=21)
+            {
+                notBusted = true;
+            }
+        }
+        if(notBusted)
+        {
+            model.getDealer().addCardToHand(model.getDeck().drawCard());
+            view.refreshDealerPanel(view.getDealerPanel(), this);
+            Timer dealerTimer = new Timer(1000, new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // Check if the dealer's hand value is less than 17
+                if (model.getDealer().getHandValue() < 17) {
+                    // Draw another card for the dealer
+                    model.getDealer().addCardToHand(model.getDeck().drawCard());
+                    view.refreshDealerPanel(view.getDealerPanel(), Controller.this);
+                } else {
+                    // Stop the timer if dealer's hand value is 17 or more
+                    ((Timer)e.getSource()).stop();
+
+                    // Check if the dealer has busted
+                    if (model.getDealer().getHandValue() > 21) {
+                        view.showDealerBustMessage(); // Show bust message if dealer busts
+                    }
+                }
+            }
+        });
+            dealerTimer.start(); // Start the timer for dealer actions
+        }
+    }
+    
+    private void moveToNextPlayer()
+    {
+        playerIndex++;
+        firstTurn = true;
+
+        // Check if it's the dealer's turn
+        if (playerIndex >= players.size())
+        {
+            view.refreshPlayerPanels(view.getPlayersPanel()); 
+            dealerPlay(); // Start the dealer's turn if all players have played
+        }
+        else
+        {
+            view.refreshPlayerPanels(view.getPlayersPanel()); // Move to the next player
+        }
+    }
     
 }

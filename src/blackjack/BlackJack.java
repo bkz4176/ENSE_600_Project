@@ -6,17 +6,18 @@ package blackjack;
  */
 import java.util.List;
 import java.util.Scanner;
-import javax.swing.JFrame;
 
 public class BlackJack {
     private static final Scanner scanner = new Scanner(System.in);
-    private final Deck deck; 
     private final Dealer dealer;
+    private Model model;
+    private final Deck deck; 
     public static List<ActualPlayer> players;
 
 
-    public BlackJack() {
-        deck = new Deck();
+    public BlackJack(Model model) {
+        this.model = model;
+        deck = model.getDeck();
         dealer = new Dealer();
         DataFile.createFile("Game_log.txt");
     }
@@ -36,22 +37,23 @@ public class BlackJack {
             p.addCardToHand(deck.drawCard());
             p.addCardToHand(deck.drawCard());
         }
-        
-        dealer.addCardToHand(deck.drawCard());
+
+        model.getDealer().addCardToHand(deck.drawCard());
+        //model.getDealer().addCardToHand(deck.drawCard());
         
         DataFile.log("\nThe The Game is Starting\n");
 
-        /*dealer.dealerInitialCard(); // show dealers face up card
+        //dealer.dealerInitialCard(); // show dealers face up card
         
-        for(ActualPlayer p : players) // Player's turn
+        /*for(ActualPlayer p : players) // Player's turn
         {
             p.play(deck);   
-        }
+        }*/
 
-        dealer.addCardToHand(deck.drawCard());
+        /*dealer.addCardToHand(deck.drawCard());
         dealer.checkAndPlay(players,deck);
           
-        Winners.determineWinner(dealer, players);
+        /*Winners.determineWinner(dealer, players);
 
         DataFile.playerInfo(players, "Player_Info.txt");
         PlayerActions.handlePlayerDecisions(players);
