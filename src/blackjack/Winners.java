@@ -14,14 +14,20 @@ public class Winners {
         String space = " ";
         String star = " * ";
         int dealerValue = dealer.getHandValue();
+        System.out.println("Dealer's hand value: " + dealerValue);
         String width = space.repeat(11)+"* ";
 
         for(ActualPlayer p : players)
         {
             int bet = p.getBetAmount();
+            
+            //System.out.println(p.getName() + "'s hand value: " + p.getHandValue());
+            //System.out.println(p.getName() + "'s current balance: $" + p.getBalance());
+            //System.out.println(p.getName() + "'s bet: $" + bet);
+            
             if (dealerValue > 21 && p.getHandValue()<= 21)
             {
-                p.addWinnings(bet*2);
+                p.addWinnings(bet * 2);
                 System.out.print(width+p.getName() + " wins with: " + p.getHandValue());
                 DataFile.log(p.getName() + " wins with: " + p.getHandValue()+" || New bank total = $" + p.getBalance());
                 
@@ -33,7 +39,7 @@ public class Winners {
             }
             else if(dealerValue <= 21 && p.getHandValue()<=21 && p.getHandValue()>dealerValue)
             {
-                p.addWinnings(bet*2);
+                p.addWinnings(bet * 2);
                 System.out.print(width+p.getName() + " wins with: " + p.getHandValue());
                 DataFile.log(p.getName() + " wins with: " + p.getHandValue()+" || New bank total = $" + p.getBalance());
                 

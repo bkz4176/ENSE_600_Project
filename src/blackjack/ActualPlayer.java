@@ -69,9 +69,14 @@ public class ActualPlayer extends Player {
         return players;
     }
 
-    public void getBet() //
+    /*public void getBet() //
     {
         this.betAmount = PlayerActions.getBet(this);
+    }*/
+      
+     public void setBetAmount(int betAmount)
+    {
+        this.betAmount = betAmount;
     }
     public int getBetAmount() // method to get the bet amount
     {

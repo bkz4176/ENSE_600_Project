@@ -24,21 +24,21 @@ public class BlackJack {
 
     public void start() {
         
-        DataFile.playerInfo(Controller.players, "Player_Info.txt"); // this is now working correctly. Names and balances get saved c
-        deck.shuffle(); // shuffle deck at the start of each game.
+        //DataFile.playerInfo(Controller.players, "Player_Info.txt"); // this is now working correctly. Names and balances get saved c
+        //deck.shuffle(); // shuffle deck at the start of each game.
         
         /*for(ActualPlayer p : Controller.players)
         {
             p.getBet(); // get bets for each player   
         }*/
 
-        for(ActualPlayer p : Controller.players) // adding cards to each players hand
+        /*for(ActualPlayer p : Controller.players) // adding cards to each players hand
         {
             p.addCardToHand(deck.drawCard());
             p.addCardToHand(deck.drawCard());
-        }
+        }*/
 
-        model.getDealer().addCardToHand(deck.drawCard());
+        //model.getDealer().addCardToHand(deck.drawCard());
         //model.getDealer().addCardToHand(deck.drawCard());
         
         DataFile.log("\nThe The Game is Starting\n");
@@ -67,6 +67,8 @@ public class BlackJack {
 
     public static void main(String[] args) {
        
+        //DataFile.playerInfo(Controller.players, "Player_Info.txt");
+        
         Model model = new Model();
         View view = new View(model);
         Controller controller = new Controller(view, model);

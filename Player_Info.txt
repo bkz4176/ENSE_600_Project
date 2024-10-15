@@ -1,12 +1,7 @@
 Name, Bank Balance
 
-Dan, 100
-Mick, 100
-Rosisn, 100
-Rois, 100
-Mike, 100
-James, 100
-Roisin, 100
-Jesse, 100
-Jess, 100
-Daniel, 100
+Dan, 38
+Rois, 136
+Mike, 136
+MIke, 150
+James, 200

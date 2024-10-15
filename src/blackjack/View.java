@@ -205,12 +205,16 @@ public class View extends JFrame {
         headerPanel.setBackground(new Color(53, 101, 77));
         backButton = createButton("Back");
         
-        JLabel heading = createLabel(spacing.repeat(40)+"Enter Player Names:", 20, Color.YELLOW);
+        //JLabel heading = createLabel(spacing.repeat(40)+"Enter Player Names:", 20, Color.YELLOW);
+        JLabel heading = createLabel("Enter Player Names:", 20, Color.YELLOW);
+        heading.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         JPanel nameBox = new JPanel();
         nameBox.setLayout(new BoxLayout(nameBox, BoxLayout.Y_AXIS));
         nameBox.setBackground(new Color(53, 101, 77));
         nameBox.setBorder(BorderFactory.createEmptyBorder(30, 0, 0, 0));
+        nameBox.add(heading);
+        nameBox.add(spacerPanel());
         
         nameFields = new ArrayList<>();
         
@@ -231,7 +235,7 @@ public class View extends JFrame {
     }
     
         headerPanel.add(backButton);
-        headerPanel.add(heading);
+        //headerPanel.add(heading);
         startButton = createButton("Start Game");
         namePanel.add(headerPanel,BorderLayout.PAGE_START);
         namePanel.add(nameBox,BorderLayout.CENTER);
@@ -312,10 +316,6 @@ public class View extends JFrame {
         centerPanel = new JPanel();
         centerPanel.setLayout(new BoxLayout(centerPanel, BoxLayout.Y_AXIS)); // Stack vertically
         centerPanel.setBackground(new Color(53, 101, 77));
-        
-        //hitButton = createButton("Hit");
-        //stayButton = createButton("Stay");
-        //doubleDownButton = createButton("Double Down");
         
         buttonPanel.add(hitButton);
         buttonPanel.add(stayButton);
@@ -405,7 +405,7 @@ public class View extends JFrame {
             {
                 String playerName = playerNames.get(i);
                 ActualPlayer player = players.get(i); // Get the corresponding ActualPlayer
-                int balance = player.getBalance();
+                //int balance = player.getBalance();
                 
                 JPanel playerPanel = new JPanel();
                 playerPanel.setLayout(new BoxLayout(playerPanel, BoxLayout.Y_AXIS)); // Stack name and cards
@@ -426,36 +426,43 @@ public class View extends JFrame {
                 if(betsComplete)
                 {
                     List<Card> cards = player.getHand().getCards(); // Get the player's cards
-                    System.out.println(playerNames.get(i) + " has " + (cards != null ? cards.size() : 0) + " cards.");
+                    //System.out.println(playerNames.get(i) + " has " + (cards != null ? cards.size() : 0) + " cards.");
                     for (Card card : cards)
                     {
-                        JLabel cardLabel = new JLabel(card.toString()); // Assuming Card has a toString method to display it
-                        cardLabel.setForeground(Color.WHITE);
-                        cardLabel.setFont(cardLabel.getFont().deriveFont(Font.BOLD));
-                        cardLabel.setAlignmentX(Component.CENTER_ALIGNMENT); // Center card label
+ 
+                        JLabel cardLabel = createPlayerLabels(card.toString());
                         playerPanel.add(cardLabel);
-                        System.out.println("displaying " + card.toString());
-                    }                    
+
+                        //System.out.println("displaying " + card.toString());
+                    }                                 
+                    JLabel handTotalLabel = createPlayerLabels("Hand Total: " + player.hand.getValue());
+                    playerPanel.add(handTotalLabel);
                 }
                 
-                JLabel nameLabel = new JLabel(playerName);
-                nameLabel.setForeground(Color.WHITE);
-                nameLabel.setFont(nameLabel.getFont().deriveFont(Font.BOLD));
-                nameLabel.setHorizontalAlignment(SwingConstants.CENTER);
-                nameLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+                JLabel nameLabel = createPlayerLabels("Name: " +playerName);
                 playerPanel.add(nameLabel);
-                
-                JLabel balanceLabel = new JLabel("$" + balance);
-                balanceLabel.setForeground(Color.WHITE);
-                balanceLabel.setHorizontalAlignment(SwingConstants.CENTER);
-                balanceLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+                JLabel balanceLabel = createPlayerLabels("Bank Balance: $ " +player.getBalance());
                 playerPanel.add(balanceLabel);
+                JLabel betLabel = createPlayerLabels("Current Bet: $" + player.getBetAmount());
+                playerPanel.add(betLabel);
+  
                 
                 playersPanel.add(playerPanel);   
             } 
         }
         playersPanel.revalidate();
         playersPanel.repaint();
+        
+    }
+    
+    private JLabel createPlayerLabels(String text)
+    {
+        JLabel label = new JLabel(text);
+        label.setForeground(Color.WHITE);
+        label.setFont(label.getFont().deriveFont(Font.BOLD));
+        label.setHorizontalAlignment(SwingConstants.CENTER);
+        label.setAlignmentX(Component.CENTER_ALIGNMENT);
+        return label;
         
     }
     
@@ -746,6 +753,11 @@ public class View extends JFrame {
         });
         closeDialogTimer.setRepeats(false);
         closeDialogTimer.start();
+    }
+    
+    public void showMessage(String message)
+    {
+        JOptionPane.showMessageDialog(null, message, "Action Error", JOptionPane.WARNING_MESSAGE);
     }
     
 }
