@@ -69,14 +69,20 @@ public class Model {
 
     public void setPlayerNames(ArrayList<String> names)
     {
-        playerNames.clear();
+        
         this.playerNames = names;
     }
     
     public void setPlayers(List<ActualPlayer> players)
     {
-        players.clear();
+        //players.clear();
         this.players = players;
+        playerNames.clear();
+        for(ActualPlayer p : players)
+        {
+            playerNames.add(p.getName());
+        }
+        
     }
     
     public List<ActualPlayer> getPlayers()

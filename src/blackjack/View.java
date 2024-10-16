@@ -66,6 +66,7 @@ public class View extends JFrame {
     private final String spacing = " ";
     
     private boolean betsComplete = false;
+    private boolean dealerBust = false;
      
     public View(Model model)
     {
@@ -178,6 +179,7 @@ public class View extends JFrame {
         playerPanel.setBorder(BorderFactory.createEmptyBorder(30, 0, 0, 0)); // IMPPRTANT!!
         
         
+        
         SpinnerModel model = new SpinnerNumberModel(1, 1, 7, 1); // Initial value, min, max, step
         spinner = new JSpinner(model);
         spinner.setPreferredSize(new Dimension(60, 30));
@@ -259,7 +261,8 @@ public class View extends JFrame {
         //betPanel.setLayout(new FlowLayout(FlowLayout.CENTER));
         placeBets.setBackground(new Color(53, 101, 77));
         
-        JPanel centerPanel = new JPanel();
+        //JPanel centerPanel = new JPanel();
+        centerPanel = new JPanel();
         centerPanel.setLayout(new BoxLayout(centerPanel, BoxLayout.Y_AXIS)); // Stack vertically
         centerPanel.setBackground(new Color(53, 101, 77));
         // Add label to show current player's turn
@@ -293,6 +296,7 @@ public class View extends JFrame {
         mainPanel.add(centerPanel,BorderLayout.CENTER);
         //mainPanel.add(buttonPanel, BorderLayout.PAGE_END);
         
+        clickBacktoHomeButton();
         initializeBettingCycle();
         return mainPanel;  
           
@@ -306,7 +310,7 @@ public class View extends JFrame {
         headerPanel.setBackground(new Color(53, 101, 77));
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
         buttonPanel.setBackground(new Color(53, 101, 77));
-        //JPanel playersPanel = new JPanel();
+        
         playersPanel.setBackground(new Color(53, 101, 77));
 
         dealerPanel = new JPanel();
@@ -327,10 +331,11 @@ public class View extends JFrame {
         centerPanel.add(dealerPanel); // Add dealer panel first
         centerPanel.add(spacerPanel());
         centerPanel.add(spacerPanel());
-        centerPanel.add(spacerPanel());
+        //centerPanel.add(spacerPanel());
     
         updatePlayerPanels(playersPanel);
         centerPanel.add(playersPanel);
+        //centerPanel.add(spacerPanel());
         
         headerPanel.add(backButton);
         
@@ -340,40 +345,46 @@ public class View extends JFrame {
         
         mainPanel.revalidate(); // Refresh the layout
         mainPanel.repaint();
-        clickBacktoHomeButton(welcomePanel);
+        clickBacktoHomeButton();
         return mainPanel;
     }
     
     private void updateDealerPanel(JPanel dealerPanel, Controller controller)
     {
         dealerPanel.removeAll(); // Clear previous content
-        String dealer = "Dealer";
-        JLabel dealerLabel = new JLabel(dealer);
-        dealerLabel.setForeground(Color.WHITE);
-        dealerLabel.setFont(dealerLabel.getFont().deriveFont(Font.BOLD));
-        dealerLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-        dealerPanel.add(dealerLabel);
         
-        Dealer dealerObj = controller.getDealer();
-        List<Card> dealerCards = dealerObj.getHand().getCards();
+        JLabel dealerLabel = createPlayerLabels("Dealer");
+        dealerPanel.add(dealerLabel);
+        Dealer dealer = controller.getDealer();
+        List<Card> dealerCards = dealer.getHand().getCards();
+        JLabel handTotalLabel = createPlayerLabels("Hand Total: " + dealer.hand.getValue());
+        dealerPanel.add(handTotalLabel);
 
         if (dealerCards != null && !dealerCards.isEmpty())
         {
+            JPanel cardPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+            cardPanel.setBackground(new Color(53, 101, 77));
             for (Card card : dealerCards)
             {
-                JLabel cardLabel = new JLabel(card.toString());
-                cardLabel.setForeground(Color.WHITE);
-                cardLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-                dealerPanel.add(cardLabel);
+
+                //JLabel cardLabel = createPlayerLabels(card.toString());
+                addImageToPanel(cardPanel,card.getImagePath());
+                dealerPanel.add(cardPanel);
             }
         } 
         else
         {
-            JLabel noCardsLabel = new JLabel("Dealer has no cards yet.");
-            noCardsLabel.setForeground(Color.WHITE);
-            dealerPanel.add(noCardsLabel);
+            JLabel noCardLabel = createPlayerLabels("Dealer has no cards yet!");
+            dealerPanel.add(noCardLabel);   
         }
-
+        
+        if(dealerBust)
+        {
+            JLabel bustLabel = createPlayerLabels(showDealerBustMessage());
+            bustLabel.setForeground(Color.RED);
+            dealerPanel.add(bustLabel);
+            dealerBust = false;
+        }
         dealerPanel.revalidate();
         dealerPanel.repaint();
     }
@@ -383,6 +394,11 @@ public class View extends JFrame {
         ArrayList<String> playerNames = model.getPlayerNames();
         List<ActualPlayer> players = Controller.players;
         
+        if (players.isEmpty())
+        {
+            System.out.println("No players to update.");
+            return; // Skip updating panels if no players are left
+        }
         System.out.println("Creating player panels...");
         if(playerNames!=null)
         {
@@ -422,18 +438,19 @@ public class View extends JFrame {
                     }
                 }
                 playerPanel.setMinimumSize(new Dimension(100, 80)); // Minimum width of 100 pixels
-                playerPanel.setPreferredSize(new Dimension(120, 80));
+                playerPanel.setPreferredSize(new Dimension(120, 120));
                 if(betsComplete)
                 {
                     List<Card> cards = player.getHand().getCards(); // Get the player's cards
-                    //System.out.println(playerNames.get(i) + " has " + (cards != null ? cards.size() : 0) + " cards.");
+                    JPanel cardPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+                    cardPanel.setBackground(new Color(53, 101, 77));
+                    
                     for (Card card : cards)
                     {
- 
-                        JLabel cardLabel = createPlayerLabels(card.toString());
-                        playerPanel.add(cardLabel);
-
-                        //System.out.println("displaying " + card.toString());
+                        //JLabel cardLabel = createPlayerLabels(card.toString());
+                        //playerPanel.add(cardLabel);
+                        addImageToPanel(cardPanel,card.getImagePath());
+                        playerPanel.add(cardPanel);
                     }                                 
                     JLabel handTotalLabel = createPlayerLabels("Hand Total: " + player.hand.getValue());
                     playerPanel.add(handTotalLabel);
@@ -445,8 +462,17 @@ public class View extends JFrame {
                 playerPanel.add(balanceLabel);
                 JLabel betLabel = createPlayerLabels("Current Bet: $" + player.getBetAmount());
                 playerPanel.add(betLabel);
-  
                 
+                if(controller.outcomes!=null)
+                {
+                    String outcome = controller.outcomes.get(player);
+                    if(outcome!=null)
+                    {
+                        JLabel outcomeLabel = createPlayerLabels(outcome != null ? outcome : "No Result");
+                        outcomeLabel.setForeground(outcome.equals("Winner") ? Color.GREEN : (outcome.equals("Loser") ? Color.RED : Color.ORANGE));
+                        playerPanel.add(outcomeLabel);
+                    }
+                }
                 playersPanel.add(playerPanel);   
             } 
         }
@@ -484,13 +510,13 @@ public class View extends JFrame {
         });
     }
      
-    private void clickBacktoHomeButton(JPanel panel)
+    private void clickBacktoHomeButton()
     {
         backButton.addActionListener(e -> {
             
             int response = JOptionPane.showConfirmDialog(
             null, 
-            "Are you sure? All progress will be lost!", 
+            "Are you sure? This will cancel the current game!", 
             "Return to Home Screen", 
             JOptionPane.YES_NO_OPTION, 
             JOptionPane.QUESTION_MESSAGE            
@@ -498,7 +524,6 @@ public class View extends JFrame {
             if (response == JOptionPane.YES_OPTION)
             {
                 resetGameState();
-                switchToPanel(panel);
             }
         });
     } 
@@ -514,80 +539,6 @@ public class View extends JFrame {
         setContentPane(newPanel);
         revalidate();
         repaint();
-    }
-    
-    public JButton getRulesButton() {
-        return rulesButton;
-    }
-
-    public JButton getPlayButton() {
-        return playButton;
-    }
-
-    public JButton getStatsButton() {
-        return statsButton;
-    }
-    
-    public JButton getSubmitButton()
-    {
-        return submitButton;
-    }
-    
-    public JButton getStartButton()
-    {
-        return startButton;
-    }
-    
-    public JButton getHitButton()
-    {
-        return hitButton;
-    }
-    
-    public JButton getStayButton()
-    {
-        return stayButton;
-    }
-    public JButton getDoubleDownButton()
-    {
-        return doubleDownButton;
-    }
-    
-    JPanel getRulesPanel() {
-        
-        return rulesPanel;
-    }
-
-    JPanel getStatsPanel() {
-        
-        return statsPanel;
-    }
-    
-    JPanel getPlayPanel()
-    {
-        
-        return playPanel;
-    }
-    
-    JPanel getBlackJackPanel()
-    {
-        //betPanel = betPanel();
-        blackJackPanel = blackJackPanel(); 
-        
-        return blackJackPanel;
-    }
-    
-     JPanel getBetPanel()
-    {
-        betPanel = betPanel();
-        return betPanel;
-    }
-    public JPanel getPlayersPanel()
-    {
-        return playersPanel;
-    }
-    public JPanel getDealerPanel()
-    {
-        return dealerPanel;
     }
     
     public void refreshPlayerPanels(JPanel playersPanel)
@@ -609,19 +560,37 @@ public class View extends JFrame {
         blackJackPanel.repaint();   
     }
     
+    public void refreshBetPanel(JPanel playersPanel)
+    {
+        playersPanel.removeAll();
+        updatePlayerPanels(playersPanel);
+        centerPanel.revalidate(); // Refresh the layout of the centerPanel
+        centerPanel.repaint(); 
+        betPanel.revalidate();
+        betPanel.repaint();
+    }
+    
     public void setRulesText(String rules)
     {
         rulesTextArea.setText(rules);
     }
     
-    private void addImageToPanel(JPanel panel, String imagePath) { // not used yet
-        // Load the image
+    private void addImageToPanel(JPanel panel, String imagePath) { 
         ImageIcon imageIcon = new ImageIcon(imagePath);
-        
-        // Optionally, resize the image to fit the panel
-        Image img = imageIcon.getImage().getScaledInstance(100, 50, Image.SCALE_SMOOTH); // You can change dimensions
-        ImageIcon resizedIcon = new ImageIcon(img);
-        
+        Image originalImage = imageIcon.getImage();
+
+        // Keep the aspect ratio of the original image
+        int originalWidth = originalImage.getWidth(null);
+        int originalHeight = originalImage.getHeight(null);
+    
+        // Set new dimensions proportional to the original size
+        int newWidth = 50; // Adjust this size as needed
+        int newHeight = (int) ((double) newWidth / originalWidth * originalHeight);
+    
+        // Resize the image while keeping aspect ratio
+        Image resizedImage = originalImage.getScaledInstance(newWidth, newHeight, Image.SCALE_SMOOTH);
+        ImageIcon resizedIcon = new ImageIcon(resizedImage);
+    
         // Create a label with the resized image
         JLabel imageLabel = new JLabel(resizedIcon);
 
@@ -639,7 +608,7 @@ public class View extends JFrame {
         return nameFields;
     }
     
-    private void resetGameState()
+    public void resetGameState()
     {
         nameFields.clear();
         model.getDealer().clearHand();
@@ -650,6 +619,7 @@ public class View extends JFrame {
         // Rebuild the Blackjack panel UI
         betPanel = betPanel();
         blackJackPanel = blackJackPanel();  // Reinitialize the Blackjack panel
+        switchToPanel(welcomePanel);
     }
     
     private void initializeBettingCycle()
@@ -735,24 +705,11 @@ public class View extends JFrame {
         showDialogTimer.start();
     }
     
-    public void showDealerBustMessage()
+    public String showDealerBustMessage()
     {
+        dealerBust = true;
         String message = "Dealer has busted!";
-        JOptionPane optionPane = new JOptionPane(message, JOptionPane.INFORMATION_MESSAGE);
-        JDialog dialog = optionPane.createDialog("Dealer Bust");
-
-        // Show the message dialog
-        dialog.setVisible(true);
-
-        // Automatically close the dialog after 1 second
-        Timer closeDialogTimer = new Timer(1000, new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-            dialog.dispose();
-            }
-        });
-        closeDialogTimer.setRepeats(false);
-        closeDialogTimer.start();
+        return message;        
     }
     
     public void showMessage(String message)
@@ -760,4 +717,80 @@ public class View extends JFrame {
         JOptionPane.showMessageDialog(null, message, "Action Error", JOptionPane.WARNING_MESSAGE);
     }
     
+                    // GETTERS
+    
+     public JButton getRulesButton() {
+        return rulesButton;
+    }
+
+    public JButton getPlayButton() {
+        return playButton;
+    }
+
+    public JButton getStatsButton() {
+        return statsButton;
+    }
+    
+    public JButton getSubmitButton()
+    {
+        return submitButton;
+    }
+    
+    public JButton getStartButton()
+    {
+        return startButton;
+    }
+    
+    public JButton getHitButton()
+    {
+        return hitButton;
+    }
+    
+    public JButton getStayButton()
+    {
+        return stayButton;
+    }
+    public JButton getDoubleDownButton()
+    {
+        return doubleDownButton;
+    }
+    
+    JPanel getRulesPanel() {
+        
+        return rulesPanel;
+    }
+
+    JPanel getStatsPanel() {
+        
+        return statsPanel;
+    }
+    
+    JPanel getPlayPanel()
+    {
+        
+        return playPanel;
+    }
+    
+    JPanel getBlackJackPanel()
+    {
+        //betPanel = betPanel();
+        blackJackPanel = blackJackPanel(); 
+        
+        return blackJackPanel;
+    }
+    
+     JPanel getBetPanel()
+    {
+        betsComplete = false;
+        betPanel = betPanel();
+        return betPanel;
+    }
+    public JPanel getPlayersPanel()
+    {
+        return playersPanel;
+    }
+    public JPanel getDealerPanel()
+    {
+        return dealerPanel;
+    }  
 }

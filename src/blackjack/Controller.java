@@ -12,8 +12,10 @@ package blackjack;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
-import java.util.Iterator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import javax.swing.JDialog;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
@@ -27,6 +29,8 @@ public class Controller {
     private boolean firstTurn = true;
     private boolean doubleDown = false;
     private boolean checkPlayAgain = false;
+    Map<ActualPlayer, String> outcomes = new HashMap<>();
+    
 
     
     public Controller(View view, Model model) {
@@ -102,10 +106,6 @@ public class Controller {
             System.out.println("Player "+x+": "+s); // debugger
             x++;
         }
-        
-        //showBlackjack();
-        //ActualPlayer.initializePlayers(playerNames);
-        //BlackJack game = new BlackJack(model);
         players = ActualPlayer.initializePlayers(playerNames);
         DataFile.playerInfo(Controller.players, "Player_Info.txt");
         startNewGame();
@@ -146,6 +146,7 @@ public class Controller {
         // Optionally log or print the bet for debugging
         System.out.println(currentPlayer.getName() + " placed a bet of $" + currentPlayer.getBetAmount());
         //updateBalanceLabel(playerIndex);
+        view.refreshBetPanel(view.getPlayersPanel());
 
         return true; // Bet was successful
     }
@@ -243,6 +244,36 @@ public class Controller {
         }
     }
     
+    private void moveToNextPlayer()
+    {
+        playerIndex++;
+        firstTurn = true;
+        doubleDown = false;
+
+        // Check if it's the dealer's turn
+        if (playerIndex >= players.size())
+        {
+            view.refreshPlayerPanels(view.getPlayersPanel()); 
+            
+            //dealerPlay(); // Start the dealer's turn if all players have played
+            //playAgain();
+            Timer timer = new Timer(1000, new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                ((Timer) e.getSource()).stop(); // Stop the timer
+                dealerPlay(); // Start the dealer's turn after 1 second
+            }
+        });
+
+        timer.setRepeats(false); // Ensure the timer only runs once
+        timer.start(); // Start the timer
+        }
+        else
+        {
+            view.refreshPlayerPanels(view.getPlayersPanel()); // Move to the next player
+        }
+    }
+    
     private void dealerPlay()
     {
         boolean notBusted = false;
@@ -273,118 +304,84 @@ public class Controller {
                     // Check if the dealer has busted
                     if (model.getDealer().getHandValue() > 21) {
                         view.showDealerBustMessage(); // Show bust message if dealer busts
+                        
                     }
-                    Winners.determineWinner(model.getDealer(), players);
-                    DataFile.playerInfo(players, "Player_Info.txt");
-                    playAgain();
+                    
+                    outcomes = Winners.determineWinner(model.getDealer(), players);
+                    view.refreshPlayerPanels(view.getPlayersPanel());
+                    
+                    Timer outcomeDisplayTimer = new Timer(1000, new ActionListener() {
+                        @Override
+                        public void actionPerformed(ActionEvent e) {
+                            outcomes = null; // Clear outcomes after displaying them
+                            DataFile.playerInfo(players, "Player_Info.txt");
+                            playAgain(); // Proceed to the next round
+                            ((Timer) e.getSource()).stop(); // Stop this timer
+                        }
+                    });
+                    outcomeDisplayTimer.setRepeats(false); // Only run once
+                    outcomeDisplayTimer.start(); // Start the timer for delaying playAgai
                 }
             }
         });
             dealerTimer.start(); // Start the timer for dealer actions
         }
-    }
-    
-    private void moveToNextPlayer()
-    {
-        playerIndex++;
-        firstTurn = true;
-        doubleDown = false;
-
-        // Check if it's the dealer's turn
-        if (playerIndex >= players.size())
-        {
-            view.refreshPlayerPanels(view.getPlayersPanel()); 
-            dealerPlay(); // Start the dealer's turn if all players have played
-            //playAgain();
-        }
         else
         {
-            view.refreshPlayerPanels(view.getPlayersPanel()); // Move to the next player
+            playAgain();
         }
     }
     
     private void playAgain()
     {
-        //List<ActualPlayer> playersToRemove = new ArrayList<>();
-        Iterator<ActualPlayer> iterator = players.iterator();
         List<ActualPlayer> playersToKeep = new ArrayList<>();
-        
-        /*for (ActualPlayer player : players)
-        {
-            if (player.getBalance() == 0)
-            {
-                handlePlayerExit(player);
-                playersToRemove.add(player); // Mark for removal
-                continue; // Skip the dialog if they have no balance
-            }
-        }
-        
         
         for (ActualPlayer player : players)
         {
-            if(player.getBalance()==0)
-            {
-                handlePlayerExit(player);
-            }
-        int response = JOptionPane.showConfirmDialog(
-                view, // Reference to your main GUI frame or panel
-                player.getName() + ", do you want to play again?", 
-                "Play Again", 
-                JOptionPane.YES_NO_OPTION,
-                JOptionPane.QUESTION_MESSAGE
-        );
-        if (response == JOptionPane.YES_OPTION)
-        {
-            // Player wants to play again, reset their status
-            resetForNextGame(player);
-        } else
-        {
-            // Handle the case where the player chooses not to play again
-            handlePlayerExit(player);
-            playersToRemove.add(player);
-        }
-        }
-        for (ActualPlayer player : playersToRemove)
-        {
-            players.remove(player);
-        }
-        checkPlayAgain = true;
-        startNextGame();*/
-        while (iterator.hasNext())
-        {
-            ActualPlayer player = iterator.next();
-        
             if (player.getBalance() == 0)
             {
                 handlePlayerExit(player);
-                iterator.remove(); // Safely remove the player from the list
-                continue; // Skip to the next iteration
+                //playersToRemove.add(player); // Mark for removal
+                continue; // Skip the dialog if they have no balance
             }
-        
-                int response = JOptionPane.showConfirmDialog(
+
+            int response = JOptionPane.showConfirmDialog(
                 view, // Reference to your main GUI frame or panel
                 player.getName() + ", do you want to play again?", 
                 "Play Again", 
                 JOptionPane.YES_NO_OPTION,
                 JOptionPane.QUESTION_MESSAGE
-        );
-
-        if (response == JOptionPane.YES_OPTION)
-        {
-            // Player wants to play again, reset their status
-            playersToKeep.add(player);
-            resetForNextGame(player);
-        } else
-        {
+            );
+            if (response == JOptionPane.YES_OPTION)
+            {
+                // Player wants to play again, reset their status
+                playersToKeep.add(player);
+                resetForNextGame(player);
+            
+            } 
+            else
+            {
             // Handle the case where the player chooses not to play again
             handlePlayerExit(player);
-            iterator.remove(); // Safely remove the player from the list
+            //playersToKeep.add(player);
+            }
         }
-    }
-    players = playersToKeep;
-    model.setPlayers(players);
-    checkPlayAgain = true;
-    startNextGame();
+    
+        System.out.println("Before assignment: Current players size = " + players.size());
+        System.out.println("Players to keep size = " + playersToKeep.size());
+        players = playersToKeep;
+        model.setPlayers(players);
+        model.setNumOfPlayer(players.size());
+    
+        System.out.println("After assignment: New players size = " + players.size());
+    
+        System.out.println("Remaining players: " + players.size());
+        for (ActualPlayer p : players)
+        {
+            System.out.println("Player: " + p.getName() + " Balance: " + p.getBalance());
+        }
+        checkPlayAgain = true;
+        startNextGame();
         
     }
     
@@ -413,9 +410,19 @@ public class Controller {
         {
             checkPlayAgain = false;
             playerIndex = 0;
-            //model.getDealer().clearHand();
+            model.getDealer().clearHand();
+            if (!players.isEmpty())
+            {
             startNewGame();
+            view.refreshDealerPanel(view.getDealerPanel(), this);
+            view.refreshPlayerPanels(view.getPlayersPanel());
             view.switchToPanel(view.getBetPanel());
+            }
+            else
+            {
+                endGame();
+                System.out.println("Players list is empty");
+            }
         }
         
     }
@@ -436,5 +443,38 @@ public class Controller {
         }
         model.getDealer().addCardToHand(model.getDeck().drawCard());
 
+    }
+    private void endGame()
+    {
+        if (players.isEmpty())
+        {
+
+            JOptionPane optionPane = new JOptionPane(
+            "All players are out. Returning to the home screen.", 
+            JOptionPane.INFORMATION_MESSAGE
+            );
+        
+            // Create a JDialog from the JOptionPane
+            JDialog dialog = optionPane.createDialog(view, "Game Over");
+            dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+        
+            // Start a Timer to close the dialog after 1 second
+            Timer timer = new Timer(1000, new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    dialog.dispose(); // Close the dialog automatically
+                    view.resetGameState(); // Return to home screen after closing
+
+                    // Stop the timer
+                    ((Timer) e.getSource()).stop();
+                }
+            });
+        
+            timer.setRepeats(false); // Ensure the timer only runs once
+            timer.start(); // Start the timer
+        
+            // Show the dialog (it will auto-close after 1 second)
+            dialog.setVisible(true);
+        }
     }
 }

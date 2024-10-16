@@ -26,10 +26,16 @@ public class Card {
     public int getValue() {
         return value;
     }
+    
+    public String getImagePath()
+    {
+        return "./cards/" + toString() +".png";
+    }
 
     @Override
     public String toString() {
-        return rank + " of " + suit;
+        //return rank + " of " + suit;
+        return rank+"-"+suit;
     }
     
 }

@@ -1,7 +1,12 @@
 Name, Bank Balance
 
-Dan, 38
-Rois, 136
-Mike, 136
+Dan, 90
+Myron, 88
+Rois, 172
+12, 88
+Seb, 100
+Mike, 153
 MIke, 150
+Dylan, 100
 James, 200
+Jess, 88
