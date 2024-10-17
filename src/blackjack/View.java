@@ -11,19 +11,20 @@ package blackjack;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
-import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.GridLayout;
 import java.awt.Image;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.util.ArrayList;
 import java.util.List;
 import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.border.LineBorder;
+import java.sql.SQLException;
 
 public class View extends JFrame {
     
@@ -36,6 +37,7 @@ public class View extends JFrame {
     private JPanel playersPanel;
     private JPanel centerPanel;
     private JPanel dealerPanel;
+    private JPanel statsDisplayPanel;
     
     private JButton submitButton;
     private JButton statsButton;
@@ -49,14 +51,12 @@ public class View extends JFrame {
     private JButton betButton;
     
     private int currentPlayerIndex = 0; // Index to track which player's turn it is
-    private JTextField betField = new JTextField();
-    private JLabel playerPromptLabel = new JLabel(); // To display the current player's name
+    private final JTextField betField = new JTextField();
+    private final JLabel playerPromptLabel = new JLabel(); // To display the current player's name
     private List<Integer> bets = new ArrayList<>(); // Store bets in sequence
             
     private JTextArea rulesTextArea;
-    private ArrayList<JTextField> nameFields;
-    //ArrayList<JLabel> playerBalanceLabels = new ArrayList<>();
-   
+    private ArrayList<JTextField> nameFields;   
     
     private final Model model;
     private Controller controller;
@@ -78,6 +78,13 @@ public class View extends JFrame {
         initializeComponents();
         setContentPane(welcomePanel);
         setVisible(true);
+        
+        addWindowListener(new WindowAdapter() {
+        @Override
+        public void windowClosing(WindowEvent e) {
+            model.shutdownDatabase(); // Call the shutdown method here
+        }
+    });
         
     }
     public void setController(Controller controller)
@@ -124,12 +131,16 @@ public class View extends JFrame {
         
         JPanel panel = new JPanel(new BorderLayout());
         panel.setBackground(new Color(53, 101, 77));
-        JLabel label = createLabel(spacing.repeat(20)+"Games Rules", 32, Color.YELLOW);
+        JLabel label = createLabel(spacing.repeat(30)+"Games Rules", 32, Color.YELLOW);
         
         JPanel headerPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         headerPanel.setBackground(new Color(53, 101, 77));
         backButton = createButton("Back");
-      
+        
+        JPanel rulesPanel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        rulesPanel.setBackground(new Color(53, 101, 77));
+
         headerPanel.add(backButton); 
         headerPanel.add(label);
         panel.add(headerPanel,BorderLayout.PAGE_START);
@@ -139,7 +150,9 @@ public class View extends JFrame {
         rulesTextArea.setBackground(new Color(53, 101, 77));
         rulesTextArea.setForeground(Color.WHITE);
         rulesTextArea.setFont(new Font("Serif", Font.BOLD, 16));
-        panel.add(new JScrollPane(rulesTextArea), BorderLayout.CENTER);
+        rulesTextArea.setAlignmentX(Component.CENTER_ALIGNMENT);
+        rulesPanel.add(rulesTextArea);
+        panel.add(rulesPanel);
         
         clickBackButton(welcomePanel);
         return panel;
@@ -150,20 +163,46 @@ public class View extends JFrame {
     {
         JPanel panel = new JPanel(new BorderLayout());
         panel.setBackground(new Color(53, 101, 77));
-        JLabel label = createLabel(spacing.repeat(25)+"Statistics", 32, Color.YELLOW);
+        JLabel label = createLabel(spacing.repeat(28)+"Player Statistics", 32, Color.YELLOW);
         JPanel headerPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         headerPanel.setBackground(new Color(53, 101, 77));
         backButton = createButton("Back");
+        
+        JPanel centerDisplayPanel = new JPanel();
+        centerDisplayPanel.setLayout(new BoxLayout(centerDisplayPanel, BoxLayout.Y_AXIS));
+        centerDisplayPanel.setBackground(new Color(53, 101, 77));
+ 
+        statsDisplayPanel = new JPanel();
+        statsDisplayPanel.setLayout(new BoxLayout(statsDisplayPanel, BoxLayout.Y_AXIS));
+        statsDisplayPanel.setBackground(new Color(53, 101, 77));
+        statsDisplayPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        
+        refreshStatsPanel(statsDisplayPanel);
+        JScrollPane scrollPane = new JScrollPane(statsDisplayPanel);
+        int padding = 15; // Set your desired padding size
+        Border paddingBorder = BorderFactory.createEmptyBorder(padding, padding, padding, padding);
+        scrollPane.setBackground(new Color(53, 101, 77)); // Set to your background color
+        scrollPane.getViewport().setBackground(new Color(53, 101, 77)); // Also set the viewport background
+        scrollPane.setOpaque(true);
+
+        // Set a yellow line border with padding
+        Border lineBorder = BorderFactory.createLineBorder(Color.YELLOW);
+        Border compoundBorder = BorderFactory.createCompoundBorder(lineBorder, paddingBorder);
+        scrollPane.setBorder(compoundBorder);
+        
+        centerDisplayPanel.add(Box.createVerticalGlue());
+        centerDisplayPanel.add(scrollPane);
+        centerDisplayPanel.add(Box.createVerticalGlue());
       
         headerPanel.add(backButton); 
         headerPanel.add(label);
         panel.add(headerPanel,BorderLayout.PAGE_START);
+        panel.add(centerDisplayPanel, BorderLayout.CENTER);
         clickBackButton(welcomePanel);
         
-        return panel;
-        
+        return panel;    
     }
-    
+        
     private JPanel playPanel()
     {
         JPanel panel = new JPanel(new BorderLayout());
@@ -178,12 +217,11 @@ public class View extends JFrame {
         JLabel numOfPlayers = createLabel("Select the Number of Players", 20, Color.YELLOW);
         playerPanel.setBorder(BorderFactory.createEmptyBorder(30, 0, 0, 0)); // IMPPRTANT!!
         
-        
-        
         SpinnerModel model = new SpinnerNumberModel(1, 1, 7, 1); // Initial value, min, max, step
         spinner = new JSpinner(model);
         spinner.setPreferredSize(new Dimension(60, 30));
         submitButton = createButton("Submit");
+        
         
         playerPanel.add(numOfPlayers);
         playerPanel.add(spinner);
@@ -191,6 +229,7 @@ public class View extends JFrame {
         headerPanel.add(backButton); 
         panel.add(headerPanel,BorderLayout.PAGE_START);
         panel.add(playerPanel,BorderLayout.CENTER);
+        //panel.add(imagePanel,BorderLayout.WEST);
         
 
         clickBackButton(welcomePanel);
@@ -207,7 +246,6 @@ public class View extends JFrame {
         headerPanel.setBackground(new Color(53, 101, 77));
         backButton = createButton("Back");
         
-        //JLabel heading = createLabel(spacing.repeat(40)+"Enter Player Names:", 20, Color.YELLOW);
         JLabel heading = createLabel("Enter Player Names:", 20, Color.YELLOW);
         heading.setAlignmentX(Component.CENTER_ALIGNMENT);
 
@@ -237,7 +275,6 @@ public class View extends JFrame {
     }
     
         headerPanel.add(backButton);
-        //headerPanel.add(heading);
         startButton = createButton("Start Game");
         namePanel.add(headerPanel,BorderLayout.PAGE_START);
         namePanel.add(nameBox,BorderLayout.CENTER);
@@ -258,10 +295,8 @@ public class View extends JFrame {
         
         JPanel placeBets = new JPanel();
         placeBets.setLayout(new BoxLayout(placeBets, BoxLayout.Y_AXIS));
-        //betPanel.setLayout(new FlowLayout(FlowLayout.CENTER));
         placeBets.setBackground(new Color(53, 101, 77));
-        
-        //JPanel centerPanel = new JPanel();
+
         centerPanel = new JPanel();
         centerPanel.setLayout(new BoxLayout(centerPanel, BoxLayout.Y_AXIS)); // Stack vertically
         centerPanel.setBackground(new Color(53, 101, 77));
@@ -294,7 +329,6 @@ public class View extends JFrame {
         
         mainPanel.add(headerPanel, BorderLayout.NORTH);
         mainPanel.add(centerPanel,BorderLayout.CENTER);
-        //mainPanel.add(buttonPanel, BorderLayout.PAGE_END);
         
         clickBacktoHomeButton();
         initializeBettingCycle();
@@ -331,11 +365,9 @@ public class View extends JFrame {
         centerPanel.add(dealerPanel); // Add dealer panel first
         centerPanel.add(spacerPanel());
         centerPanel.add(spacerPanel());
-        //centerPanel.add(spacerPanel());
     
         updatePlayerPanels(playersPanel);
         centerPanel.add(playersPanel);
-        //centerPanel.add(spacerPanel());
         
         headerPanel.add(backButton);
         
@@ -377,6 +409,7 @@ public class View extends JFrame {
             JLabel noCardLabel = createPlayerLabels("Dealer has no cards yet!");
             dealerPanel.add(noCardLabel);   
         }
+        
         
         if(dealerBust)
         {
@@ -447,8 +480,6 @@ public class View extends JFrame {
                     
                     for (Card card : cards)
                     {
-                        //JLabel cardLabel = createPlayerLabels(card.toString());
-                        //playerPanel.add(cardLabel);
                         addImageToPanel(cardPanel,card.getImagePath());
                         playerPanel.add(cardPanel);
                     }                                 
@@ -570,6 +601,37 @@ public class View extends JFrame {
         betPanel.repaint();
     }
     
+    public void refreshStatsPanel(JPanel statsDisplayPanel)
+    {
+         if (statsDisplayPanel == null) {
+            System.out.println("statsDisplayPanel is null");
+            return;
+        }
+        if (model == null) {
+            System.out.println("model is null");
+            return;
+        }
+        statsDisplayPanel.removeAll();
+        try {
+        List<String> stats = model.getPlayerStats();  // Get stats from the database
+        for (String stat : stats)
+        {
+            JLabel statLabel = new JLabel(stat);  // Create a label for each stat
+            statLabel.setForeground(Color.WHITE);  // Set text color
+            statsDisplayPanel.add(statLabel);  // Add label to the stats panel
+        }
+        } catch (SQLException e)
+        {
+            e.printStackTrace();
+            JLabel errorLabel = new JLabel("Error retrieving stats.");
+            errorLabel.setForeground(Color.RED);
+            statsDisplayPanel.add(errorLabel);
+        }
+        statsDisplayPanel.revalidate();
+        statsDisplayPanel.repaint();
+        
+    }
+    
     public void setRulesText(String rules)
     {
         rulesTextArea.setText(rules);
@@ -579,22 +641,17 @@ public class View extends JFrame {
         ImageIcon imageIcon = new ImageIcon(imagePath);
         Image originalImage = imageIcon.getImage();
 
-        // Keep the aspect ratio of the original image
         int originalWidth = originalImage.getWidth(null);
         int originalHeight = originalImage.getHeight(null);
-    
-        // Set new dimensions proportional to the original size
+
         int newWidth = 50; // Adjust this size as needed
         int newHeight = (int) ((double) newWidth / originalWidth * originalHeight);
-    
-        // Resize the image while keeping aspect ratio
+
         Image resizedImage = originalImage.getScaledInstance(newWidth, newHeight, Image.SCALE_SMOOTH);
         ImageIcon resizedIcon = new ImageIcon(resizedImage);
-    
-        // Create a label with the resized image
+
         JLabel imageLabel = new JLabel(resizedIcon);
 
-        // Add the image label to the panel
         panel.add(imageLabel);
     }
     
@@ -613,12 +670,13 @@ public class View extends JFrame {
         nameFields.clear();
         model.getDealer().clearHand();
         betPanel.removeAll();
-        blackJackPanel.removeAll(); 
-        // Optionally reset other game-related components or variables here, like scores or game state
-    
-        // Rebuild the Blackjack panel UI
         betPanel = betPanel();
-        blackJackPanel = blackJackPanel();  // Reinitialize the Blackjack panel
+        
+        if(blackJackPanel!=null)
+        {
+            blackJackPanel.removeAll();
+            blackJackPanel = blackJackPanel();
+        }
         switchToPanel(welcomePanel);
     }
     
@@ -651,7 +709,6 @@ public class View extends JFrame {
  
             blackJackPanel = blackJackPanel();
             switchToPanel(blackJackPanel);
-            //betsComplete = false;  
         }   
     }
     
@@ -685,21 +742,15 @@ public class View extends JFrame {
         JDialog dialog = optionPane.createDialog("Player Bust");
         dialog.setModal(false);
         
-        Timer showDialogTimer = new Timer(500, new ActionListener() {
-        @Override
-        public void actionPerformed(ActionEvent e) {
+        Timer showDialogTimer = new Timer(500, (ActionEvent e) -> {
             dialog.setVisible(true);
             
             // Create another timer to close the dialog after 1 second
-            Timer closeDialogTimer = new Timer(1000, new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    dialog.dispose(); // Close the dialog
-                }
+            Timer closeDialogTimer = new Timer(1000, (ActionEvent e1) -> {
+                dialog.dispose(); // Close the dialog
             });
             closeDialogTimer.setRepeats(false); // Ensure this timer only runs once
             closeDialogTimer.start(); // Start the timer to close the dialog
-        }
         });
         showDialogTimer.setRepeats(false); // Ensure this timer only runs once
         showDialogTimer.start();
@@ -773,9 +824,7 @@ public class View extends JFrame {
     
     JPanel getBlackJackPanel()
     {
-        //betPanel = betPanel();
-        blackJackPanel = blackJackPanel(); 
-        
+        blackJackPanel = blackJackPanel();    
         return blackJackPanel;
     }
     
@@ -792,5 +841,10 @@ public class View extends JFrame {
     public JPanel getDealerPanel()
     {
         return dealerPanel;
-    }  
+    }
+    
+    public JPanel getstatsDisplayPanel()
+    {
+        return statsDisplayPanel;
+    } 
 }

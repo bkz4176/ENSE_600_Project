@@ -5,12 +5,10 @@ package blackjack;
  * @author daniel
  */
 import java.util.List;
-import java.util.Scanner;
 
 public class BlackJack {
-    private static final Scanner scanner = new Scanner(System.in);
     private final Dealer dealer;
-    private Model model;
+    private final Model model;
     private final Deck deck; 
     public static List<ActualPlayer> players;
 
@@ -24,8 +22,6 @@ public class BlackJack {
 
     public static void main(String[] args) {
        
-        //DataFile.playerInfo(Controller.players, "Player_Info.txt");
-        
         Model model = new Model();
         View view = new View(model);
         Controller controller = new Controller(view, model);

@@ -10,11 +10,13 @@ package blackjack;
  */
 
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.JDialog;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -22,8 +24,8 @@ import javax.swing.JTextField;
 import javax.swing.Timer;
 
 public class Controller {
-    private View view;
-    private Model model;
+    private final View view;
+    private final Model model;
     public static List<ActualPlayer> players;
     private int playerIndex = 0;
     private boolean firstTurn = true;
@@ -37,12 +39,24 @@ public class Controller {
         this.view = view;
         this.model = model;
 
-        view.getRulesButton().addActionListener(e -> showRules());
+        view.getRulesButton().addActionListener(e -> {
+            try {
+                showRules();
+            } catch (SQLException ex) {
+                Logger.getLogger(Controller.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        });
         view.getPlayButton().addActionListener(e -> showPlayers()); // Placeholder for play game
         view.getStatsButton().addActionListener(e -> showStats());
         view.getSubmitButton().addActionListener(e -> {
             getNumPlayers();  
-            view.getStartButton().addActionListener(e2 -> getPlayerNames());
+            view.getStartButton().addActionListener(e2 -> {
+                try {
+                    getPlayerNames();
+                } catch (SQLException ex) {
+                    Logger.getLogger(Controller.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            });
         });
         view.getHitButton().addActionListener(e -> handleHit());
         view.getStayButton().addActionListener(e -> handleStay());
@@ -53,7 +67,7 @@ public class Controller {
         view.switchToPanel(view.getStatsPanel());
     }
 
-    private void showRules() {
+    private void showRules() throws SQLException {
         view.setRulesText(model.getRules());
         view.switchToPanel(view.getRulesPanel());
     }
@@ -91,7 +105,7 @@ public class Controller {
         view.nameFields(numberOfPlayers);
     }
     
-    private void getPlayerNames()
+    private void getPlayerNames() throws SQLException
     {
         System.out.println("Start button clicked!");
         ArrayList<String> playerNames = new ArrayList<>();
@@ -106,17 +120,15 @@ public class Controller {
             System.out.println("Player "+x+": "+s); // debugger
             x++;
         }
-        players = ActualPlayer.initializePlayers(playerNames);
+        players = model.initializePlayers(playerNames);
         DataFile.playerInfo(Controller.players, "Player_Info.txt");
         startNewGame();
-        //game.start();
         showBetPanel();
         
         for (ActualPlayer p : players)
         {
             System.out.println("Debugger: " + p.getName() + ", Balance: " + p.getBalance());
         }
-        //game.start();
         
     }
     public int getPlayerIndex()
@@ -145,7 +157,6 @@ public class Controller {
 
         // Optionally log or print the bet for debugging
         System.out.println(currentPlayer.getName() + " placed a bet of $" + currentPlayer.getBetAmount());
-        //updateBalanceLabel(playerIndex);
         view.refreshBetPanel(view.getPlayersPanel());
 
         return true; // Bet was successful
@@ -228,12 +239,9 @@ public class Controller {
         {
             // Handle player bust (e.g., notify the player, update UI)
             view.showPlayerBust(player); 
-            Timer delayTimer = new Timer(1500, new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
+            Timer delayTimer = new Timer(1500, (ActionEvent e) -> {
                 moveToNextPlayer();
-            }
-        });
+            });
         delayTimer.setRepeats(false); // Ensure the timer runs only once
         delayTimer.start(); // Start the timer with a delay
     
@@ -242,6 +250,7 @@ public class Controller {
         {
             moveToNextPlayer();
         }
+        
     }
     
     private void moveToNextPlayer()
@@ -254,16 +263,10 @@ public class Controller {
         if (playerIndex >= players.size())
         {
             view.refreshPlayerPanels(view.getPlayersPanel()); 
-            
-            //dealerPlay(); // Start the dealer's turn if all players have played
-            //playAgain();
-            Timer timer = new Timer(1000, new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
+            Timer timer = new Timer(1000, (ActionEvent e) -> {
                 ((Timer) e.getSource()).stop(); // Stop the timer
                 dealerPlay(); // Start the dealer's turn after 1 second
-            }
-        });
+            });
 
         timer.setRepeats(false); // Ensure the timer only runs once
         timer.start(); // Start the timer
@@ -289,9 +292,7 @@ public class Controller {
         {
             model.getDealer().addCardToHand(model.getDeck().drawCard());
             view.refreshDealerPanel(view.getDealerPanel(), this);
-            Timer dealerTimer = new Timer(1000, new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
+            Timer dealerTimer = new Timer(1000, (ActionEvent e) -> {
                 // Check if the dealer's hand value is less than 17
                 if (model.getDealer().getHandValue() < 17) {
                     // Draw another card for the dealer
@@ -308,22 +309,20 @@ public class Controller {
                     }
                     
                     outcomes = Winners.determineWinner(model.getDealer(), players);
+                    model.savePlayerStats(players);
+                    view.refreshStatsPanel(view.getstatsDisplayPanel());
                     view.refreshPlayerPanels(view.getPlayersPanel());
                     
-                    Timer outcomeDisplayTimer = new Timer(1000, new ActionListener() {
-                        @Override
-                        public void actionPerformed(ActionEvent e) {
-                            outcomes = null; // Clear outcomes after displaying them
-                            DataFile.playerInfo(players, "Player_Info.txt");
-                            playAgain(); // Proceed to the next round
-                            ((Timer) e.getSource()).stop(); // Stop this timer
-                        }
+                    Timer outcomeDisplayTimer = new Timer(1000, (ActionEvent e1) -> {
+                        outcomes = null; // Clear outcomes after displaying them
+                        DataFile.playerInfo(players, "Player_Info.txt");
+                        playAgain(); // Proceed to the next round
+                        ((Timer) e1.getSource()).stop(); // Stop this timer
                     });
                     outcomeDisplayTimer.setRepeats(false); // Only run once
                     outcomeDisplayTimer.start(); // Start the timer for delaying playAgai
                 }
-            }
-        });
+            });
             dealerTimer.start(); // Start the timer for dealer actions
         }
         else
@@ -341,7 +340,6 @@ public class Controller {
             if (player.getBalance() == 0)
             {
                 handlePlayerExit(player);
-                //playersToRemove.add(player); // Mark for removal
                 continue; // Skip the dialog if they have no balance
             }
 
@@ -396,12 +394,10 @@ public class Controller {
         if(player.getBalance()==0)
         {
             System.out.println(player.getName() + " is out of money and will be removed from the game.");
-            //players.remove(player);   
         }
         else
         {
             System.out.println(player.getName() + " has chosen to exit the game.");
-            //players.remove(player);
         }
     }
     private void startNextGame()
@@ -459,15 +455,12 @@ public class Controller {
             dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
         
             // Start a Timer to close the dialog after 1 second
-            Timer timer = new Timer(1000, new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    dialog.dispose(); // Close the dialog automatically
-                    view.resetGameState(); // Return to home screen after closing
-
-                    // Stop the timer
-                    ((Timer) e.getSource()).stop();
-                }
+            Timer timer = new Timer(1000, (ActionEvent e) -> {
+                dialog.dispose(); // Close the dialog automatically
+                view.resetGameState(); // Return to home screen after closing
+                
+                // Stop the timer
+                ((Timer) e.getSource()).stop();
             });
         
             timer.setRepeats(false); // Ensure the timer only runs once

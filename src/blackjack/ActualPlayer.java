@@ -3,77 +3,51 @@ package blackjack;
  *
  * @author daniel
  */
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Scanner;
 
 public class ActualPlayer extends Player {
     
     private final BankAccount bankAccount; // final
-    static Scanner scanner = new Scanner(System.in);
     private int betAmount;
     private boolean firstTurn;
-    List<ActualPlayer> players = new ArrayList<>();
+    
+    private int totalEarnings;
+    private int gamesPlayed;
+    private int gamesWon;
+    private int gamesLost;
+    private int gamesDrawn;
+    private int currentStreak;
+    private int totalLoses;
+    private int totalWinnings;
 
     public ActualPlayer(String name) // constructor for initilizing a new player.
     {
         super(name);
         this.bankAccount = new BankAccount(100);
         this.firstTurn = true;
+        this.totalEarnings = 0;
+        this.gamesPlayed = 0;
+        this.gamesWon = 0;
+        this.gamesLost = 0;
+        this.gamesDrawn = 0;
+        this.currentStreak = 0;
+        this.totalLoses = 0;
+        this.totalWinnings = 0;
     }
 
-    public ActualPlayer(String name, int balance) { // constructor for initializing an existing player 
+    public ActualPlayer(String name, int balance, int totalEarnings, int gamesPlayed, int gamesWon, int gamesLost, int gamesDrawn, int currentStreak) { // constructor for initializing an existing player 
         super(name);
         this.bankAccount = new BankAccount(balance);
         this.firstTurn = true;
+        this.totalEarnings = totalEarnings; // Existing total earnings
+        this.gamesPlayed = gamesPlayed; // Existing games played
+        this.gamesWon = gamesWon; // Existing games won
+        this.gamesDrawn = gamesDrawn;
+        this.gamesLost = gamesLost; // Existing games lost
+        this.currentStreak = currentStreak; // Existing current streak
+        this.totalLoses = 0; // You can adjust how to handle this
+        this.totalWinnings = 0;
     }
-
-      public static List<ActualPlayer> initializePlayers(ArrayList<String> names) // method to get the number of players and the name of each player
-    //If the player has played a game previously it loads the existing balance of the player.
-    {
-        
-        List<ActualPlayer> players = new ArrayList<>();
-        
-        String space = " ";
-        String width = space.repeat(11)+"* ";
-        //System.out.print(width+"Enter the number of players(1-7): ");
-        Map<String, Integer> existingPlayerInfo = DataFile.readPlayerInfo("Player_Info.txt");
-  
-        
-        for(String s : names)
-        {
-             if(existingPlayerInfo.containsKey(s))
-            {
-                int balance = existingPlayerInfo.get(s);
-                if(balance == 0)
-                {
-                    System.out.println(width + "Welcome back, " + s + "! A new balance has been loaded for you");
-                    players.add(new ActualPlayer(s));
-                }
-                else
-                {
-                    System.out.println(width + "Welcome back, " + s + "! Your balance has been loaded");
-                    players.add(new ActualPlayer(s, balance));
-                    System.out.println(s + " balance = "+ balance);
-                }    
-            }
-            else
-            {
-                players.add(new ActualPlayer(s));
-                System.out.println(width + "Welcome " + s);
-                //System.out.println(s + " balance = "+ s.);
-            }
-        }
-        DataFile.log(""); 
-        return players;
-    }
-
-    /*public void getBet() //
-    {
-        this.betAmount = PlayerActions.getBet(this);
-    }*/
-      
+    
      public void setBetAmount(int betAmount)
     {
         this.betAmount = betAmount;
@@ -112,58 +86,70 @@ public class ActualPlayer extends Player {
     {
         this.firstTurn = firstTurn;
     }
+    
+    // New methods for player statistics
+    public void incrementGamesPlayed() {
+        gamesPlayed++;
+    }
+
+    public void incrementGamesWon() {
+        gamesWon++;
+        currentStreak++;
+    }
+
+    public void incrementGamesLost() {
+        gamesLost++;
+        currentStreak = 0; // Reset streak on loss
+    }
+    
+    public void incrementGamesDrawn(){
+        gamesDrawn++;
+    }
+    
+    public void setTotalLoss(int bet)
+    {
+        this.totalLoses = bet;
+    }
+    
+    public void setTotalWinnings(int bet)
+    {
+        this.totalWinnings = bet;
+    }
+    
+    public void setTotalEarnings()
+    {
+        this.totalEarnings += this.totalWinnings-this.totalLoses;
+        this.totalLoses = 0;
+        this.totalWinnings = 0;
+    }
+
+    public int getTotalEarnings() {
+        return totalEarnings;
+    }
+
+    public int getGamesPlayed() {
+        return gamesPlayed;
+    }
+    
+    public int getGamesDrawn(){
+        return gamesDrawn;
+    }
+
+    public int getGamesWon() {
+        return gamesWon;
+    }
+
+    public int getGamesLost() {
+        return gamesLost;
+    }
+
+    public int getCurrentStreak() {
+        return currentStreak;
+    }
 
     @Override
     public void play(Deck deck)//Method for players to play the game.
     {
-        String space = " " ;
-        int totalWidth = 50;
-        int nameLength = name.length();
-        int paddingBefore = (totalWidth - 12 - nameLength) / 2;
-        String width = space.repeat(11)+"* ";
-        
-        while (true) {
-
-            System.out.print(width+"\n");
-            System.out.println(width+space.repeat(paddingBefore)+name + "'s turn!" );
-            System.out.println(width+hand + " (value: " + getHandValue() + ")");
-            DataFile.log(name + "'s turn!");
-            DataFile.log(hand + " (value: " + getHandValue() + ")");
-
-                if(getHandValue() == 21)
-                {
-                    break;
-                }
-
-                String action = PlayerActions.getAction(this);
-
-                switch (action.toLowerCase()) {
-                    case "h":
-                        PlayerActions.hit(this, deck);
-                        if (getHandValue() > 21) {
-                            
-                            break;
-                        }
-                        break;
-                    case "s":
-                        break;
-                    case "d":
-                        if (getBalance() >= this.betAmount) {
-                            PlayerActions.doubleDown(this, deck);
-                            this.betAmount = this.betAmount*2;
-                            return;
-                        } else {
-                            System.out.println(width+ "Unable to Double Down");
-                            DataFile.log("Unable to Double Down");
-                        }
-                        break;
-                }
-                firstTurn = false;
-                if (action.equalsIgnoreCase("s") || getHandValue() > 21) {
-                    break;
-                }
-            }
-        }
-        
     }
+ }
 
