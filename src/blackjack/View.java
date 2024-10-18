@@ -27,6 +27,10 @@ import javax.swing.border.LineBorder;
 import java.sql.SQLException;
 
 public class View extends JFrame {
+    // Initilize attributes of the View class
+    
+    private final Model model;
+    private Controller controller;
     
     private JPanel welcomePanel;
     private JPanel statsPanel;
@@ -54,21 +58,17 @@ public class View extends JFrame {
     private final JTextField betField = new JTextField();
     private final JLabel playerPromptLabel = new JLabel(); // To display the current player's name
     private List<Integer> bets = new ArrayList<>(); // Store bets in sequence
-            
+         
     private JTextArea rulesTextArea;
     private ArrayList<JTextField> nameFields;   
-    
-    private final Model model;
-    private Controller controller;
-    
-    
     private JSpinner spinner;
     private final String spacing = " ";
-    
     private boolean betsComplete = false;
     private boolean dealerBust = false;
-     
-    public View(Model model)
+    
+    // Initializes the View for the BlackJack game, sets up the window properties,
+    //and adds a listener to shut down the database on close.
+    public View(Model model) 
     {
         this.model = model;
         setTitle("BlackJack Game");
@@ -91,7 +91,7 @@ public class View extends JFrame {
     {
         this.controller = controller;
     }
-    
+    // Initializes the GUI components for the BlackJack game, including panels and buttons.
     private void initializeComponents() {
         welcomePanel = welcomePanel();
         rulesPanel = rulesPanel();
@@ -99,11 +99,10 @@ public class View extends JFrame {
         playPanel = playPanel();
         hitButton = createButton("Hit");
         stayButton = createButton("Stay");
-        doubleDownButton = createButton("Double Down");
-        
+        doubleDownButton = createButton("Double Down");   
     }
     
-    private JPanel welcomePanel()
+    private JPanel welcomePanel() // intial Panel which appears on start up.
     {
         JPanel panel = new JPanel(new GridLayout(3, 1, 10, 10));//this panel has 3 rows, 1 column, height is 10
         
@@ -126,9 +125,8 @@ public class View extends JFrame {
         return panel;
     }
     
-    private JPanel rulesPanel()
+    private JPanel rulesPanel() // panel for accessing game rules.
     {
-        
         JPanel panel = new JPanel(new BorderLayout());
         panel.setBackground(new Color(53, 101, 77));
         JLabel label = createLabel(spacing.repeat(30)+"Games Rules", 32, Color.YELLOW);
@@ -159,7 +157,7 @@ public class View extends JFrame {
         
     }
     
-    private JPanel statsPanel()
+    private JPanel statsPanel() // panel for accessing the player stats.
     {
         JPanel panel = new JPanel(new BorderLayout());
         panel.setBackground(new Color(53, 101, 77));
@@ -203,7 +201,7 @@ public class View extends JFrame {
         return panel;    
     }
         
-    private JPanel playPanel()
+    private JPanel playPanel() // panel for starting the game. this is where you select the number of players. MAX 7
     {
         JPanel panel = new JPanel(new BorderLayout());
         panel.setBackground(new Color(53, 101, 77));
@@ -233,7 +231,7 @@ public class View extends JFrame {
         return panel;
     }
     
-    public void nameFields(int numberOfPlayers)
+    public void nameFields(int numberOfPlayers) // panel for inputing player names
     {
         JPanel namePanel = new JPanel(new BorderLayout());
         namePanel.setBackground(new Color(53, 101, 77));
@@ -280,7 +278,7 @@ public class View extends JFrame {
         clickBackButton(playPanel);
     }
     
-    private JPanel betPanel()
+    private JPanel betPanel() // panel for taking the players Bets
     {
         JPanel mainPanel = new JPanel(new BorderLayout());
         mainPanel.setBackground(new Color(53, 101, 77));
@@ -332,7 +330,7 @@ public class View extends JFrame {
           
     }
     
-    private JPanel blackJackPanel()
+    private JPanel blackJackPanel() // BlackJack panel for playing the actual game.
     {
         JPanel mainPanel = new JPanel(new BorderLayout());
         mainPanel.setBackground(new Color(53, 101, 77));
@@ -376,8 +374,8 @@ public class View extends JFrame {
         clickBacktoHomeButton();
         return mainPanel;
     }
-    
-    private void updateDealerPanel(JPanel dealerPanel, Controller controller)
+    // method to update the dealer panel which is displayed on the blackjack panel.
+    private void updateDealerPanel(JPanel dealerPanel, Controller controller) 
     {
         dealerPanel.removeAll(); // Clear previous content
         
@@ -417,7 +415,7 @@ public class View extends JFrame {
         dealerPanel.revalidate();
         dealerPanel.repaint();
     }
-    
+    // method to update the Player panel which is displayed on the blackjack panel.
     private void updatePlayerPanels(JPanel playersPanel)
     {
         ArrayList<String> playerNames = model.getPlayerNames();
@@ -432,14 +430,6 @@ public class View extends JFrame {
         if(playerNames!=null)
         {
             int numPlayers = playerNames.size();
-            int totalWidth = 750; // Frame width
-            int totalNameWidth = 0;
-            for (String playerName : playerNames)
-            {
-                totalNameWidth += playerName.length() * 10; // Approximate width per character
-            }
-            int availableSpace = totalWidth - totalNameWidth;
-            int spaceBetween = availableSpace / (numPlayers + 1); // +1 for space on each end
             
             playersPanel.removeAll();  // Ensure we start with a clean panel
             playersPanel.setLayout(new GridLayout(1, numPlayers, 10, 0)); // 1 row// numPlayers columsn// 10pixel horizontal gap
@@ -508,7 +498,7 @@ public class View extends JFrame {
         
     }
     
-    private JLabel createPlayerLabels(String text)
+    private JLabel createPlayerLabels(String text) // method to create playler labels
     {
         JLabel label = new JLabel(text);
         label.setForeground(Color.WHITE);
@@ -518,25 +508,26 @@ public class View extends JFrame {
         return label;
         
     }
-    
-    private JLabel createLabel(String text, int fontSize, Color color) {
+    //method to create labels such as headings
+    private JLabel createLabel(String text, int fontSize, Color color) { 
         JLabel label = new JLabel(text, JLabel.CENTER);
         label.setForeground(color);
         label.setFont(new Font("Serif", Font.BOLD, fontSize));
         return label;
     }
-    
-     private JButton createButton(String text) {
+    // method to create buttons.
+    private JButton createButton(String text) {
         return new JButton(text);    
     }
-     
+    //method to swicth panels if back button was clicked.
     private void clickBackButton(JPanel panel)
     {
         backButton.addActionListener(e -> {
             switchToPanel(panel);
         });
     }
-     
+     // method to switch back to home of home button is clicked.
+    //this method also cancels the current games and resets the game state.
     private void clickBacktoHomeButton()
     {
         backButton.addActionListener(e -> {
@@ -555,19 +546,19 @@ public class View extends JFrame {
         });
     } 
      
-    private JPanel spacerPanel()
+    private JPanel spacerPanel() // method to create space panels if needed.
     {
         JPanel panel = new JPanel();
         panel.setBackground(new Color(53, 101, 77));
         return panel;  
     }
-    
+    // method to switch to a specified panel.
     public void switchToPanel(JPanel newPanel) {
         setContentPane(newPanel);
         revalidate();
         repaint();
     }
-    
+    // method to refreshPlayerPanels. this gets called in the controller class
     public void refreshPlayerPanels(JPanel playersPanel)
     {
         playersPanel.removeAll();
@@ -577,6 +568,7 @@ public class View extends JFrame {
         blackJackPanel.revalidate();
         blackJackPanel.repaint();
     }
+    // method to refresh DealerPanel. this gets called in the controller class
     public void refreshDealerPanel(JPanel dealerPanel, Controller controller)
     {
         dealerPanel.removeAll();
@@ -586,7 +578,7 @@ public class View extends JFrame {
         blackJackPanel.revalidate();
         blackJackPanel.repaint();   
     }
-    
+    // method to refreh the bet Panel. this gets called in the controller class
     public void refreshBetPanel(JPanel playersPanel)
     {
         playersPanel.removeAll();
@@ -596,7 +588,7 @@ public class View extends JFrame {
         betPanel.revalidate();
         betPanel.repaint();
     }
-    
+    // method to refresh the stats Panel. this gets called in the controller class
     public void refreshStatsPanel(JPanel statsDisplayPanel)
     {
          if (statsDisplayPanel == null) {
@@ -633,6 +625,7 @@ public class View extends JFrame {
         rulesTextArea.setText(rules);
     }
     
+    // this method adds the card images to the anel during game play.
     private void addImageToPanel(JPanel panel, String imagePath) { 
         ImageIcon imageIcon = new ImageIcon(imagePath);
         Image originalImage = imageIcon.getImage();
@@ -640,7 +633,7 @@ public class View extends JFrame {
         int originalWidth = originalImage.getWidth(null);
         int originalHeight = originalImage.getHeight(null);
 
-        int newWidth = 50; // Adjust this size as needed
+        int newWidth = 50; 
         int newHeight = (int) ((double) newWidth / originalWidth * originalHeight);
 
         Image resizedImage = originalImage.getScaledInstance(newWidth, newHeight, Image.SCALE_SMOOTH);
@@ -650,17 +643,8 @@ public class View extends JFrame {
 
         panel.add(imageLabel);
     }
-    
-    public int getSpinnerValue()
-    {
-        return (int) spinner.getValue();
-    }
-    
-    public ArrayList<JTextField> getNameFields()
-    {
-        return nameFields;
-    }
-    
+   
+    // this method resets the game state and returns to the home panel.
     public void resetGameState()
     {
         nameFields.clear();
@@ -676,13 +660,14 @@ public class View extends JFrame {
         switchToPanel(welcomePanel);
     }
     
+    // method to start the betting cycle
     private void initializeBettingCycle()
     {
         currentPlayerIndex = 0;
         promptNextPlayer(); // Prompt the first player
       
     }
-
+    // methid to prompt the correct player to place a bet
     private void promptNextPlayer()
     {
         if(currentPlayerIndex < model.getNumOfPlayers())
@@ -707,7 +692,7 @@ public class View extends JFrame {
             switchToPanel(blackJackPanel);
         }   
     }
-    
+    // method to pass the bet to the controller class 
     private void submitBet()
     {
         String betInput = betField.getText();
@@ -730,7 +715,7 @@ public class View extends JFrame {
                 JOptionPane.showMessageDialog(null, "Invalid input. Please enter a integer.");
             }
     }
-    
+    // if a player busts this message diplays
     public void showPlayerBust(ActualPlayer player)
     {
         String message = player.getName() + " has busted!";
@@ -751,10 +736,10 @@ public class View extends JFrame {
         showDialogTimer.setRepeats(false); // Ensure this timer only runs once
         showDialogTimer.start();
     }
-    
+    // if the delaer busts then this message displays.
     public String showDealerBustMessage()
     {
-        dealerBust = true;
+        dealerBust = true; // set to true so the dealer panel can update correctly.
         String message = "Dealer has busted!";
         return message;        
     }
@@ -764,7 +749,7 @@ public class View extends JFrame {
         JOptionPane.showMessageDialog(null, message, "Action Error", JOptionPane.WARNING_MESSAGE);
     }
     
-                    // GETTERS
+    // GETTERS for the controller.
     
      public JButton getRulesButton() {
         return rulesButton;
@@ -818,10 +803,15 @@ public class View extends JFrame {
         return playPanel;
     }
     
-    JPanel getBlackJackPanel()
+     // gets the spinner value set by player.
+    public int getSpinnerValue()
     {
-        blackJackPanel = blackJackPanel();    
-        return blackJackPanel;
+        return (int) spinner.getValue();
+    }
+    // get
+    public ArrayList<JTextField> getNameFields()
+    {
+        return nameFields;
     }
     
      JPanel getBetPanel()

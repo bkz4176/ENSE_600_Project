@@ -39,7 +39,7 @@ public class Model {
         try {
             this.connection = DriverManager.getConnection(DB_URL);
             System.out.println(DB_URL + " Get Connected Successfully ....");
-            //dropPlayersTable();
+            //dropPlayersTable(); // use if need to remove all players from database
             createTables(); // Create tables if they don't exist
             createRulesTable();
         } catch (SQLException e) {
