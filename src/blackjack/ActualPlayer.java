@@ -48,10 +48,11 @@ public class ActualPlayer extends Player {
         this.totalWinnings = 0;
     }
     
-     public void setBetAmount(int betAmount)
+    public void setBetAmount(int betAmount)
     {
         this.betAmount = betAmount;
     }
+    
     public int getBetAmount() // method to get the bet amount
     {
         return betAmount;

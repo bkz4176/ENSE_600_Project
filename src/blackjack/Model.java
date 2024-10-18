@@ -10,9 +10,6 @@ package blackjack;
  */
 //import com.sun.jdi.connect.spi.Connection;
 import java.sql.Connection;
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.sql.DriverManager;
@@ -23,7 +20,7 @@ import java.sql.Date;
 import java.sql.ResultSet;
 
 public class Model {
-    //private final String rules;
+    // Initilize attributes of the model class
     private int numOfPlayers = 0;
     private ArrayList<String> playerNames;
     private List<ActualPlayer> players;
@@ -31,16 +28,14 @@ public class Model {
     private final Deck deck;
     
     
-    private static final String DB_URL = "jdbc:derby:myBlackjackDB;create=true";
+    private static final String DB_URL = "jdbc:derby:myBlackjackDB;create=true"; // Database URL
     private Connection connection;
 
     public Model()
     {
-        //rules = loadRulesFromFile("Game_rules.txt");
         playerNames = new ArrayList<>();
         dealer = new Dealer();
         this.deck = new Deck();
-        
         try {
             this.connection = DriverManager.getConnection(DB_URL);
             System.out.println(DB_URL + " Get Connected Successfully ....");
@@ -75,46 +70,35 @@ public class Model {
             }
         }
     }
-
-    /*private String loadRulesFromFile(String fileName)
-    {
-        StringBuilder content = new StringBuilder();
-        try (BufferedReader br = new BufferedReader(new FileReader(fileName)))
-        {
-            String line;
-            while ((line = br.readLine()) != null)
-            {
-                content.append(line).append("\n");
-            }
-        } catch (IOException e)
-        {
-            content.append("Error reading file: ").append(e.getMessage());
-        }
-        return content.toString();
-    }*/
     
-    public int getNumOfPlayers()
+    public int getNumOfPlayers() // getter for number of players
     {
         return numOfPlayers;
     }
     
-    public void setNumOfPlayer(int x)
+    public void setNumOfPlayer(int x) // setter for number of players
     {
         this.numOfPlayers = x;
     }
     
-    public ArrayList<String> getPlayerNames()
+    public ArrayList<String> getPlayerNames() // getter for player names
     {
         return playerNames;
     }
 
-    public void setPlayerNames(ArrayList<String> names)
+    public void setPlayerNames(ArrayList<String> names) //setter for player names
     {
-        
+        for (String name : names)
+        {
+            if (name == null || name.trim().isEmpty())
+            {
+                throw new IllegalArgumentException("Player names cannot be null or empty");
+            }
+        }
         this.playerNames = names;
     }
     
-    public void setPlayers(List<ActualPlayer> players)
+    public void setPlayers(List<ActualPlayer> players) // setter for players
     {
         //players.clear();
         this.players = players;
@@ -125,20 +109,20 @@ public class Model {
         }   
     }
     
-    public List<ActualPlayer> getPlayers()
+    public List<ActualPlayer> getPlayers() // getter for players
     {
         return players;
     }
-    public Dealer getDealer()
+    public Dealer getDealer() // getter for dealer
     {
         return dealer;
     }
-    public Deck getDeck()
+    public Deck getDeck() 
     {
         return deck; // Getter for the deck
     }
     
-    private void createTables() throws SQLException {
+    private void createTables() throws SQLException {// table creation
         String createPlayersTable = "CREATE TABLE Players ("
                 + "ID INT PRIMARY KEY GENERATED ALWAYS AS IDENTITY, "
                 + "Name VARCHAR(50) UNIQUE, "
@@ -170,7 +154,7 @@ public class Model {
         }
     }
     
-    private void createRulesTable() throws SQLException {
+    private void createRulesTable() throws SQLException { // table creation
         String checkTableExists = "SELECT COUNT(*) FROM SYS.SYSTABLES WHERE TABLENAME = 'RULES'";
 
         try (Statement checkStmt = connection.createStatement();
@@ -197,7 +181,7 @@ public class Model {
         
     }
     
-    private void dropPlayersTable() throws SQLException
+    private void dropPlayersTable() throws SQLException // method to drop players table if needed.
     {
         String dropTableSQL = "DROP TABLE Players";
         try (Statement stmt = connection.createStatement())
@@ -210,7 +194,7 @@ public class Model {
         }
     }
     
-    public void addPlayer(String name, int balance, Date joinDate)
+    public void addPlayer(String name, int balance, Date joinDate) // method to add a new player to the database
     {
         String checkPlayerSQL = "SELECT COUNT(*) FROM Players WHERE Name = ?";
         String insertPlayerSQL = "INSERT INTO Players (Name, Balance, TotalEarnings, GamesPlayed, GamesWon,"
@@ -246,7 +230,7 @@ public class Model {
         }
     }
     
-    public List<ActualPlayer> initializePlayers(ArrayList<String> names) throws SQLException
+    public List<ActualPlayer> initializePlayers(ArrayList<String> names) throws SQLException // method to intitlize players from user input to play the game
     {
         List<ActualPlayer> players = new ArrayList<>();
         // Updated query to include all relevant player stats
@@ -296,7 +280,7 @@ public class Model {
         return players;
     }
     
-    public void savePlayerStats(List <ActualPlayer> player)
+    public void savePlayerStats(List <ActualPlayer> player) // method to update and save player stats to the database after each round
     {
         String sql = "UPDATE players SET Balance = ?, TotalEarnings = ?, GamesPlayed = ?, GamesWon = ?,"
                      + " GamesLost = ?, GamesDrawn = ?, CurrentWinStreak = ? WHERE Name = ?";
@@ -329,11 +313,11 @@ public class Model {
             }
     }
     
-    public List<String> getPlayerStats() throws SQLException {
+    public List<String> getPlayerStats() throws SQLException { // method to get all players stat and display them in the stats panel
         List<String> statsList = new ArrayList<>();
     
         // Example SQL query to fetch selective data
-        String query = "SELECT Name, Balance, TotalEarnings, GamesPlayed, GamesWon, GamesLost, GamesDrawn FROM Players";  
+        String query = "SELECT Name, Balance, TotalEarnings, GamesPlayed, GamesWon, GamesLost, GamesDrawn, CurrentWinStreak, JoinDate FROM Players";  
     
         try (Statement stmt = connection.createStatement();
             ResultSet rs = stmt.executeQuery(query)) {
@@ -346,11 +330,13 @@ public class Model {
                 int gamesWon = rs.getInt("GamesWon");
                 int gamesLost = rs.getInt("GamesLost");
                 int gamesDrawn = rs.getInt("GamesDrawn");
+                int currentWinStreak = rs.getInt("CurrentWinStreak");
+                Date joinDate = rs.getDate("JoinDate");
             
                 // Format the stat as a string
                 String stat = String.format(
-                "Player: %s | Balance: $%d | Total Earnings: $%d | Games Played: %d | Games Won: %d | Games Lost: %d | Games Drawn: %d", 
-                name, balance, totalEarnings, gamesPlayed, gamesWon, gamesLost, gamesDrawn
+                "Player: %s | Balance: $%d | Total Earnings: $%d | Games Played: %d | Games Won: %d | Games Lost: %d | Games Drawn: %d | Current Win Streak: %d | Join Date: %s", 
+                name, balance, totalEarnings, gamesPlayed, gamesWon, gamesLost, gamesDrawn,currentWinStreak, joinDate != null ? joinDate.toString() : "N/A"
             );
             
                 statsList.add(stat);  // Add to the list
@@ -359,7 +345,7 @@ public class Model {
         return statsList;
     }
     
-    private void insertRules() throws SQLException {
+    private void insertRules() throws SQLException { // rules insertion into the rules table
         String rules = "Rules of the Game:\n\n" +
                    "Each player must make a bet to play the game.\n" +
                    "Each player is dealt two cards. The dealer is dealt two cards with one face up and one face down.\n" +
@@ -387,18 +373,18 @@ public class Model {
         }
     }
     
-    public String getRules() throws SQLException {
-    String rules = null;
-    String selectRules = "SELECT RuleText FROM Rules";
+    public String getRules() throws SQLException { // method to display rules into the rules panel.
+        String rules = null;
+        String selectRules = "SELECT RuleText FROM Rules";
 
-    try (Statement stmt = connection.createStatement();
-         ResultSet rs = stmt.executeQuery(selectRules)) {
-        if (rs.next()) {
-            rules = rs.getString("RuleText");
+        try (Statement stmt = connection.createStatement();
+            ResultSet rs = stmt.executeQuery(selectRules)) {
+            if (rs.next()) {
+                rules = rs.getString("RuleText");
+            }
+        } catch (SQLException e) {
+            System.err.println("Error retrieving rules: " + e.getMessage());
         }
-    } catch (SQLException e) {
-        System.err.println("Error retrieving rules: " + e.getMessage());
+        return rules;
     }
-    return rules;
-}
 }

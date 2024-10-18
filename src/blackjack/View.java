@@ -216,22 +216,18 @@ public class View extends JFrame {
         playerPanel.setBackground(new Color(53, 101, 77));
         JLabel numOfPlayers = createLabel("Select the Number of Players", 20, Color.YELLOW);
         playerPanel.setBorder(BorderFactory.createEmptyBorder(30, 0, 0, 0)); // IMPPRTANT!!
-        
+
         SpinnerModel model = new SpinnerNumberModel(1, 1, 7, 1); // Initial value, min, max, step
         spinner = new JSpinner(model);
         spinner.setPreferredSize(new Dimension(60, 30));
         submitButton = createButton("Submit");
-        
-        
+
         playerPanel.add(numOfPlayers);
         playerPanel.add(spinner);
         playerPanel.add(submitButton);
         headerPanel.add(backButton); 
         panel.add(headerPanel,BorderLayout.PAGE_START);
         panel.add(playerPanel,BorderLayout.CENTER);
-        //panel.add(imagePanel,BorderLayout.WEST);
-        
-
         clickBackButton(welcomePanel);
         
         return panel;

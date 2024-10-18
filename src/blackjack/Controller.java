@@ -24,6 +24,7 @@ import javax.swing.JTextField;
 import javax.swing.Timer;
 
 public class Controller {
+    // Initilize attributes of the controller class
     private final View view;
     private final Model model;
     public static List<ActualPlayer> players;
@@ -32,9 +33,13 @@ public class Controller {
     private boolean doubleDown = false;
     private boolean checkPlayAgain = false;
     Map<ActualPlayer, String> outcomes = new HashMap<>();
-    
-
-    
+   
+ /**
+ * Constructor for the Controller class, initializing it with the provided view
+ * and model. Sets up action listeners for various buttons to link user interactions 
+ * to the corresponding methods for handling game rules, player setup, statistics,
+ * and gameplay actions like hitting, staying, and doubling down.
+ */
     public Controller(View view, Model model) {
         this.view = view;
         this.model = model;
@@ -46,7 +51,7 @@ public class Controller {
                 Logger.getLogger(Controller.class.getName()).log(Level.SEVERE, null, ex);
             }
         });
-        view.getPlayButton().addActionListener(e -> showPlayers()); // Placeholder for play game
+        view.getPlayButton().addActionListener(e -> showPlayers());
         view.getStatsButton().addActionListener(e -> showStats());
         view.getSubmitButton().addActionListener(e -> {
             getNumPlayers();  
@@ -64,26 +69,26 @@ public class Controller {
     }
 
     private void showStats() {
-        view.switchToPanel(view.getStatsPanel());
+        view.switchToPanel(view.getStatsPanel()); // switches to the stats panel
     }
 
-    private void showRules() throws SQLException {
+    private void showRules() throws SQLException { // switches to the rules panel
         view.setRulesText(model.getRules());
         view.switchToPanel(view.getRulesPanel());
     }
     
     private void showPlayers()
     {
-        view.switchToPanel(view.getPlayPanel());
+        view.switchToPanel(view.getPlayPanel()); // switches to the play panel
     }
     
-    private void showBlackjack()
+    /*private void showBlackjack()
     {
         view.switchToPanel(view.getBlackJackPanel());
         
-    }
+    }*/
     
-    private void showBetPanel()
+    private void showBetPanel() // switches to the bet Panel
     {
         JPanel betPanel = view.getBetPanel();
         if (betPanel == null)
@@ -97,7 +102,7 @@ public class Controller {
         view.switchToPanel(betPanel);
     }
     
-    private void getNumPlayers()
+    private void getNumPlayers() // gets the number of players from the spinner then sets it to the model
     {
         int numberOfPlayers = view.getSpinnerValue();
         model.setNumOfPlayer(numberOfPlayers);
@@ -105,42 +110,45 @@ public class Controller {
         view.nameFields(numberOfPlayers);
     }
     
-    private void getPlayerNames() throws SQLException
+    private void getPlayerNames() throws SQLException // gets playernames from user input
     {
         System.out.println("Start button clicked!");
         ArrayList<String> playerNames = new ArrayList<>();
+        
+        boolean hasBlankNames = false;
+        
         for(JTextField f : view.getNameFields())
         {
-            playerNames.add(f.getText().trim());
+            String playerName = f.getText().trim();
+            if(playerName.isEmpty())
+            {
+                hasBlankNames = true;
+                break; 
+            }
+            playerNames.add(playerName);
         }
-        model.setPlayerNames(playerNames);
-        int x =1;
-        for(String s : playerNames)
-        {
-            System.out.println("Player "+x+": "+s); // debugger
-            x++;
-        }
-        players = model.initializePlayers(playerNames);
-        DataFile.playerInfo(Controller.players, "Player_Info.txt");
-        startNewGame();
-        showBetPanel();
         
-        for (ActualPlayer p : players)
+        if (hasBlankNames)
         {
-            System.out.println("Debugger: " + p.getName() + ", Balance: " + p.getBalance());
+            JOptionPane.showMessageDialog(view, "Player name can not be blank!.", "Input Error", JOptionPane.WARNING_MESSAGE);
+            return; // Exit the method to prevent further processing
         }
+        model.setPlayerNames(playerNames);//set the player names from user input
+        players = model.initializePlayers(playerNames); // pass the player names to intilize players for game play.
+        startNewGame(); // start new game
+        showBetPanel();// switch to BetPanel
         
     }
     public int getPlayerIndex()
     {
         return playerIndex;
     }
-    public void setPlayerIndex(int x)
+    public void setPlayerIndex(int x)// setting player index for handling player actions such as Hit, stay , doubledown
     {
         this.playerIndex= x;
     }
     
-    public boolean processBet(int playerIndex, int betAmount)
+    public boolean processBet(int playerIndex, int betAmount) // method to process bets from user input
     {
         // Get the player object based on the index
         ActualPlayer currentPlayer = players.get(playerIndex);
@@ -155,9 +163,7 @@ public class Controller {
         currentPlayer.getBankAccount().placeBet(betAmount);
         currentPlayer.setBetAmount(betAmount);
 
-        // Optionally log or print the bet for debugging
-        System.out.println(currentPlayer.getName() + " placed a bet of $" + currentPlayer.getBetAmount());
-        view.refreshBetPanel(view.getPlayersPanel());
+        view.refreshBetPanel(view.getPlayersPanel());// update betPanel to reflect visual changes
 
         return true; // Bet was successful
     }
@@ -167,49 +173,45 @@ public class Controller {
         return model.getDealer();
     }
     
-    private void handleHit()
+    private void handleHit()// method for handlining play action hit.
     {
-        System.out.println("Player " + (playerIndex+1) + ": Hit");
-
-        //List<ActualPlayer> players = model.getPlayers();
-        System.out.println("Total players: " + players.size());
-        if (playerIndex < 0 || playerIndex >= players.size())
+        //System.out.println("Player " + (playerIndex+1) + ": Hit");
+        //System.out.println("Total players: " + players.size());
+        if (playerIndex < 0 || playerIndex >= players.size())// debbugers during testing
         {
             System.out.println("Invalid player index: " + playerIndex);
             return; // Exit early to avoid NullPointerException
         }
         
-        ActualPlayer currentPlayer = players.get(playerIndex);
+        ActualPlayer currentPlayer = players.get(playerIndex);// assign current player who's turn it is.
         
         if (currentPlayer == null)
         {
-            System.out.println("Current player is null at index: " + playerIndex);
+            System.out.println("Current player is null at index: " + playerIndex);// debbugger during testing
             return; // Exit if currentPlayer is null
         }
 
-        // Ensure the deck is initialized and not null
+        // Ensure the deck is initialized and not null. Debbugger
         if (model.getDeck() == null)
         {
             System.out.println("The deck is not initialized.");
             return; // Exit if the deck is null
         }
         
-        currentPlayer.addCardToHand(model.getDeck().drawCard());
-        //System.out.println(currentPlayer + " " + currentPlayer.getHand().toString());
-        firstTurn = false;
-        view.refreshPlayerPanels(view.getPlayersPanel());
+        currentPlayer.addCardToHand(model.getDeck().drawCard());// add card to current players hand.
+        firstTurn = false;// set first turn to false. player can no longer double down
+        view.refreshPlayerPanels(view.getPlayersPanel());// update PlayersPanel to reflect visual changes.
         checkPlayerStatus(currentPlayer); // Check if the player has busted
     }
-    private void handleStay()
+    private void handleStay()// method to handle a player selecting stay.
     {
-
         moveToNextPlayer();
-        
     }
-    private void handleDoubleDown()
+    
+    private void handleDoubleDown()//method for handling a players action to double down.
     {
-        ActualPlayer currentPlayer = players.get(playerIndex);
-        if(currentPlayer.getBalance() >= currentPlayer.getBetAmount() && firstTurn)
+        ActualPlayer currentPlayer = players.get(playerIndex); // assign current player who's turn it is.
+        if(currentPlayer.getBalance() >= currentPlayer.getBetAmount() && firstTurn) // conditions to allow current player to doubledown.
         {
             int bet = (currentPlayer.getBetAmount());
             currentPlayer.getBankAccount().placeBet(bet);
@@ -220,9 +222,9 @@ public class Controller {
             view.refreshPlayerPanels(view.getPlayersPanel());
             checkPlayerStatus(currentPlayer);
         }
-        else
+        else // display message on screen if player is unable to doubledown.
         {
-            if (currentPlayer.getBalance() < currentPlayer.getBetAmount())
+            if (currentPlayer.getBalance() < currentPlayer.getBetAmount()) 
             {
             view.showMessage("Insufficient balance to double down!");
             }
@@ -233,12 +235,11 @@ public class Controller {
         }
     }
     
-    private void checkPlayerStatus(ActualPlayer player)
+    private void checkPlayerStatus(ActualPlayer player) // checks the players ability to make another action.
     {
         if (player.getHandValue() > 21)
         {
-            // Handle player bust (e.g., notify the player, update UI)
-            view.showPlayerBust(player); 
+            view.showPlayerBust(player); // displays a bust message if handvalue is greater than 21
             Timer delayTimer = new Timer(1500, (ActionEvent e) -> {
                 moveToNextPlayer();
             });
@@ -246,18 +247,18 @@ public class Controller {
         delayTimer.start(); // Start the timer with a delay
     
         }
-        if(doubleDown && player.getHandValue()<=21)
+        if(doubleDown && player.getHandValue()<=21) //if player doubleDown and hand is <= 21 then move to next player.
         {
             moveToNextPlayer();
         }
         
     }
     
-    private void moveToNextPlayer()
+    private void moveToNextPlayer() // moves to next player.
     {
-        playerIndex++;
-        firstTurn = true;
-        doubleDown = false;
+        playerIndex++; // increment player index by 1.
+        firstTurn = true;// set first turn to true
+        doubleDown = false;// set duouble down to false.
 
         // Check if it's the dealer's turn
         if (playerIndex >= players.size())
@@ -277,10 +278,10 @@ public class Controller {
         }
     }
     
-    private void dealerPlay()
+    private void dealerPlay() // method for the dealer to play.
     {
         boolean notBusted = false;
-        // Dealer's turn if player hasn't busted
+        // Dealer only playes if at least one player has not busted.
         for(ActualPlayer p : players)
         {
             if(p.getHandValue()<=21)
@@ -288,17 +289,21 @@ public class Controller {
                 notBusted = true;
             }
         }
-        if(notBusted)
+        if(notBusted) // Dealer play.
         {
             model.getDealer().addCardToHand(model.getDeck().drawCard());
-            view.refreshDealerPanel(view.getDealerPanel(), this);
+            view.refreshDealerPanel(view.getDealerPanel(), this);// refresh panel to reflect changes.
             Timer dealerTimer = new Timer(1000, (ActionEvent e) -> {
+                
                 // Check if the dealer's hand value is less than 17
                 if (model.getDealer().getHandValue() < 17) {
+                    
                     // Draw another card for the dealer
                     model.getDealer().addCardToHand(model.getDeck().drawCard());
                     view.refreshDealerPanel(view.getDealerPanel(), Controller.this);
-                } else {
+                } 
+                else
+                {
                     // Stop the timer if dealer's hand value is 17 or more
                     ((Timer)e.getSource()).stop();
 
@@ -308,15 +313,14 @@ public class Controller {
                         
                     }
                     
-                    outcomes = Winners.determineWinner(model.getDealer(), players);
-                    model.savePlayerStats(players);
-                    view.refreshStatsPanel(view.getstatsDisplayPanel());
-                    view.refreshPlayerPanels(view.getPlayersPanel());
+                    outcomes = Winners.determineWinner(model.getDealer(), players); // store outcomes of the game in a map. keyValue pair = actualPlayer and string
+                    model.savePlayerStats(players);// update the database with update plaer stats
+                    view.refreshStatsPanel(view.getstatsDisplayPanel());// refresh stats panel to reflect changes
+                    view.refreshPlayerPanels(view.getPlayersPanel());// refresh players panel to display which player won or lost.
                     
-                    Timer outcomeDisplayTimer = new Timer(1000, (ActionEvent e1) -> {
+                    Timer outcomeDisplayTimer = new Timer(1500, (ActionEvent e1) -> { 
                         outcomes = null; // Clear outcomes after displaying them
-                        DataFile.playerInfo(players, "Player_Info.txt");
-                        playAgain(); // Proceed to the next round
+                        playAgain(); // check which players wish to play again
                         ((Timer) e1.getSource()).stop(); // Stop this timer
                     });
                     outcomeDisplayTimer.setRepeats(false); // Only run once
@@ -327,11 +331,11 @@ public class Controller {
         }
         else
         {
-            playAgain();
+            playAgain(); // check which players wish to play again
         }
     }
     
-    private void playAgain()
+    private void playAgain() // check which players wish to play again
     {
         List<ActualPlayer> playersToKeep = new ArrayList<>();
         
@@ -343,8 +347,8 @@ public class Controller {
                 continue; // Skip the dialog if they have no balance
             }
 
-            int response = JOptionPane.showConfirmDialog(
-                view, // Reference to your main GUI frame or panel
+            int response = JOptionPane.showConfirmDialog( // message prompt
+                view, 
                 player.getName() + ", do you want to play again?", 
                 "Play Again", 
                 JOptionPane.YES_NO_OPTION,
@@ -352,44 +356,40 @@ public class Controller {
             );
             if (response == JOptionPane.YES_OPTION)
             {
-                // Player wants to play again, reset their status
-                playersToKeep.add(player);
+                // if Player wants to play again, reset their status
+                playersToKeep.add(player); // if players wish to play again store them in a temp ActualPlayer list
                 resetForNextGame(player);
             
             } 
             else
             {
-            // Handle the case where the player chooses not to play again
-            handlePlayerExit(player);
-            //playersToKeep.add(player);
+                // Handle the case where the player chooses not to play again
+                handlePlayerExit(player);
+                //playersToKeep.add(player);
             }
         }
+
+        players = playersToKeep; // set players equal to the players that wish to play again list
+        model.setPlayers(players); // update the model with update players.
+        model.setNumOfPlayer(players.size()); // update model with new number of players.
     
-        System.out.println("Before assignment: Current players size = " + players.size());
-        System.out.println("Players to keep size = " + playersToKeep.size());
-        players = playersToKeep;
-        model.setPlayers(players);
-        model.setNumOfPlayer(players.size());
-    
-        System.out.println("After assignment: New players size = " + players.size());
-    
-        System.out.println("Remaining players: " + players.size());
+        System.out.println("Remaining players: " + players.size()); // debbuger
         for (ActualPlayer p : players)
         {
             System.out.println("Player: " + p.getName() + " Balance: " + p.getBalance());
         }
-        checkPlayAgain = true;
-        startNextGame();
+        checkPlayAgain = true; // set to true.
+        startNextGame(); // start the next game
         
     }
     
     private void resetForNextGame(ActualPlayer player)
     {
         player.clearHand(); // Clear player's hand
-        player.setBetAmount(0);
+        player.setBetAmount(0); // set betAmount to zero.
     }
     
-    private void handlePlayerExit(ActualPlayer player)
+    private void handlePlayerExit(ActualPlayer player) // debugger for handling for removing a player.
     {
         if(player.getBalance()==0)
         {
@@ -400,30 +400,31 @@ public class Controller {
             System.out.println(player.getName() + " has chosen to exit the game.");
         }
     }
-    private void startNextGame()
+    
+    private void startNextGame() // start new game with update players list
     {
         if(checkPlayAgain)
         {
             checkPlayAgain = false;
-            playerIndex = 0;
-            model.getDealer().clearHand();
+            playerIndex = 0;// resey player index
+            model.getDealer().clearHand(); // clear the dealers hand
             if (!players.isEmpty())
             {
-            startNewGame();
-            view.refreshDealerPanel(view.getDealerPanel(), this);
-            view.refreshPlayerPanels(view.getPlayersPanel());
-            view.switchToPanel(view.getBetPanel());
+                startNewGame();// start new game ad update neccsary panels
+                view.refreshDealerPanel(view.getDealerPanel(), this); 
+                view.refreshPlayerPanels(view.getPlayersPanel());
+                view.switchToPanel(view.getBetPanel());
             }
             else
             {
-                endGame();
+                endGame(); // if players list is empty then end game.
                 System.out.println("Players list is empty");
             }
         }
         
     }
     
-    public void startNewGame()
+    public void startNewGame() // intitlize new game
     {
         model.getDeck().shuffle();
         for (ActualPlayer p : players)
@@ -440,7 +441,7 @@ public class Controller {
         model.getDealer().addCardToHand(model.getDeck().drawCard());
 
     }
-    private void endGame()
+    private void endGame() // end game. return to home screen.
     {
         if (players.isEmpty())
         {

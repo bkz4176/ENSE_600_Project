@@ -32,10 +32,10 @@ public class Dealer extends Player
         System.out.print("\n"+width);
         System.out.println(space.repeat(paddingBefore)+"Dealers' Face up Card!"+space.repeat(paddingAfter));
         System.out.println(width+getHand() + " (value: " + getHandValue() + ")");
-        DataFile.log("Dealers' Face up Card!");
-        DataFile.log(getHand() + " (value: " + getHandValue() + ")");
+        //DataFile.log("Dealers' Face up Card!");
+        //DataFile.log(getHand() + " (value: " + getHandValue() + ")");
         System.out.println(width);
-        DataFile.log("");
+        //DataFile.log("");
     }
 
     public void checkAndPlay(List<ActualPlayer> players, Deck deck) // If all playes have busted  then the dealer wins
@@ -56,15 +56,15 @@ public class Dealer extends Player
             System.out.print(width+"\n");
             System.out.println(width+space.repeat(paddingBefore)+"Dealers' Hand!"+space.repeat(paddingAfter));
             System.out.println(width+getHand() + " (value: " + getHandValue() + ")");
-            DataFile.log("Dealers' Hand!");
-            DataFile.log(getHand() + " (value: " + getHandValue() + ")");
+           // DataFile.log("Dealers' Hand!");
+            //DataFile.log(getHand() + " (value: " + getHandValue() + ")");
             if(getHandValue()>21)
             {
                 System.out.println(width+name + " Busts!");
-                DataFile.log("Busts!");
+                //DataFile.log("Busts!");
             }
             System.out.println(width);
-            DataFile.log("");
+            //DataFile.log("");
             
         }
     }
