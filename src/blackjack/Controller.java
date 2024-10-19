@@ -81,13 +81,7 @@ public class Controller {
     {
         view.switchToPanel(view.getPlayPanel()); // switches to the play panel
     }
-    
-    /*private void showBlackjack()
-    {
-        view.switchToPanel(view.getBlackJackPanel());
-        
-    }*/
-    
+
     private void showBetPanel() // switches to the bet Panel
     {
         JPanel betPanel = view.getBetPanel();
@@ -175,8 +169,6 @@ public class Controller {
     
     private void handleHit()// method for handlining play action hit.
     {
-        //System.out.println("Player " + (playerIndex+1) + ": Hit");
-        //System.out.println("Total players: " + players.size());
         if (playerIndex < 0 || playerIndex >= players.size())// debbugers during testing
         {
             System.out.println("Invalid player index: " + playerIndex);
@@ -456,7 +448,7 @@ public class Controller {
             dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
         
             // Start a Timer to close the dialog after 1 second
-            Timer timer = new Timer(1000, (ActionEvent e) -> {
+            Timer timer = new Timer(1500, (ActionEvent e) -> {
                 dialog.dispose(); // Close the dialog automatically
                 view.resetGameState(); // Return to home screen after closing
                 
