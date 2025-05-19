@@ -1,6 +1,6 @@
 ----------------------------------------------------------------
-Sat Oct 19 22:53:21 NZDT 2024:
-Booting Derby version The Apache Software Foundation - Apache Derby - 10.14.2.0 - (1828579): instance a816c00e-0192-a432-2019-000007700000 
+Sun May 18 18:53:07 NZST 2025:
+Booting Derby version The Apache Software Foundation - Apache Derby - 10.14.2.0 - (1828579): instance a816c00e-0196-e22a-f1e4-000007700000 
 on database directory /Users/daniel/Documents/AUT/2024/Semester 2/Software Construction/Assignment 2/BlackJack/ENSE_600_Project/myBlackjackDB with class loader jdk.internal.loader.ClassLoaders$AppClassLoader@2be94b0f 
 Loaded from file:/Users/daniel/Documents/AUT/2024/Semester%202/Software%20Construction/Assignment%202/BlackJack/ENSE_600_Project/lib/derby.jar
 java.vendor=Oracle Corporation
@@ -8,12 +8,6 @@ java.runtime.version=11.0.23+7-LTS-222
 user.dir=/Users/daniel/Documents/AUT/2024/Semester 2/Software Construction/Assignment 2/BlackJack/ENSE_600_Project
 os.name=Mac OS X
 os.arch=aarch64
-os.version=15.0.1
+os.version=15.4.1
 derby.system.home=null
 Database Class Loader started - derby.database.classpath=''
-----------------------------------------------------------------
-Sat Oct 19 22:54:11 NZDT 2024: Shutting down Derby engine
-----------------------------------------------------------------
-Sat Oct 19 22:54:11 NZDT 2024:
-Shutting down instance a816c00e-0192-a432-2019-000007700000 on database directory /Users/daniel/Documents/AUT/2024/Semester 2/Software Construction/Assignment 2/BlackJack/ENSE_600_Project/myBlackjackDB with class loader jdk.internal.loader.ClassLoaders$AppClassLoader@2be94b0f 
-----------------------------------------------------------------

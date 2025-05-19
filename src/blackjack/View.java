@@ -53,6 +53,7 @@ public class View extends JFrame {
     private JButton stayButton;
     private JButton doubleDownButton;
     private JButton betButton;
+    private JButton resetStatsButton;
     
     private int currentPlayerIndex = 0; // Index to track which player's turn it is
     private final JTextField betField = new JTextField();
@@ -174,6 +175,7 @@ public class View extends JFrame {
         statsDisplayPanel.setLayout(new BoxLayout(statsDisplayPanel, BoxLayout.Y_AXIS));
         statsDisplayPanel.setBackground(new Color(53, 101, 77));
         statsDisplayPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        resetStatsButton = createButton("Reset Stats");
         
         refreshStatsPanel(statsDisplayPanel);
         JScrollPane scrollPane = new JScrollPane(statsDisplayPanel);
@@ -196,6 +198,7 @@ public class View extends JFrame {
         headerPanel.add(label);
         panel.add(headerPanel,BorderLayout.PAGE_START);
         panel.add(centerDisplayPanel, BorderLayout.CENTER);
+        panel.add(resetStatsButton, BorderLayout.PAGE_END);
         clickBackButton(welcomePanel);
         
         return panel;    
@@ -219,13 +222,22 @@ public class View extends JFrame {
         spinner = new JSpinner(model);
         spinner.setPreferredSize(new Dimension(60, 30));
         submitButton = createButton("Submit");
-
+        
+        JPanel imagePanel = new JPanel(new BorderLayout());
+        imagePanel.setBackground(new Color(53, 101, 77));
+        addImageToPanel(imagePanel, "./cards/A-Spades.png");
+        
         playerPanel.add(numOfPlayers);
+        headerPanel.add(backButton); 
         playerPanel.add(spinner);
         playerPanel.add(submitButton);
-        headerPanel.add(backButton); 
+        //playerPanel.add(spacerPanel());
+        playerPanel.add(imagePanel);
+        
         panel.add(headerPanel,BorderLayout.PAGE_START);
         panel.add(playerPanel,BorderLayout.CENTER);
+        //panel.add(spacerPanel());
+        //panel.add(imagePanel);
         clickBackButton(welcomePanel);
         
         return panel;
@@ -591,33 +603,48 @@ public class View extends JFrame {
     // method to refresh the stats Panel. this gets called in the controller class
     public void refreshStatsPanel(JPanel statsDisplayPanel)
     {
-         if (statsDisplayPanel == null) {
-            System.out.println("statsDisplayPanel is null");
-            return;
-        }
-        if (model == null) {
-            System.out.println("model is null");
-            return;
-        }
-        statsDisplayPanel.removeAll();
-        try {
+    if (statsDisplayPanel == null)
+    {
+        System.out.println("statsDisplayPanel is null");
+        return;
+    }
+    if (model == null)
+    {
+        System.out.println("model is null");
+        return;
+    }
+
+    statsDisplayPanel.removeAll();
+
+    try 
+    {
         List<String> stats = model.getPlayerStats();  // Get stats from the database
-        for (String stat : stats)
-        {
-            JLabel statLabel = new JLabel(stat);  // Create a label for each stat
-            statLabel.setForeground(Color.WHITE);  // Set text color
-            statsDisplayPanel.add(statLabel);  // Add label to the stats panel
+
+        // Combine all stats into one block of text
+        StringBuilder sb = new StringBuilder();
+        for (String stat : stats) {
+            sb.append(stat).append("\n");
         }
-        } catch (SQLException e)
+
+        JTextArea statsTextArea = new JTextArea(sb.toString());
+        statsTextArea.setFont(new Font("Monospaced", Font.PLAIN, 14));  // MONOSPACED font for alignment
+        statsTextArea.setEditable(false);
+        statsTextArea.setOpaque(false);  // Background matches parent panel
+        statsTextArea.setForeground(Color.WHITE);
+        statsTextArea.setLineWrap(false); // Critical to preserve table formatting
+
+        statsDisplayPanel.add(statsTextArea);  // Add only one text area
+
+    }catch (SQLException e)
         {
             e.printStackTrace();
             JLabel errorLabel = new JLabel("Error retrieving stats.");
             errorLabel.setForeground(Color.RED);
             statsDisplayPanel.add(errorLabel);
         }
+
         statsDisplayPanel.revalidate();
         statsDisplayPanel.repaint();
-        
     }
     
     public void setRulesText(String rules)
@@ -625,7 +652,7 @@ public class View extends JFrame {
         rulesTextArea.setText(rules);
     }
     
-    // this method adds the card images to the anel during game play.
+    // this method adds the card images to the panel during game play.
     private void addImageToPanel(JPanel panel, String imagePath) { 
         ImageIcon imageIcon = new ImageIcon(imagePath);
         Image originalImage = imageIcon.getImage();
@@ -753,6 +780,9 @@ public class View extends JFrame {
     
      public JButton getRulesButton() {
         return rulesButton;
+    }
+     public JButton getResetStatsButton() {
+        return resetStatsButton;
     }
 
     public JButton getPlayButton() {

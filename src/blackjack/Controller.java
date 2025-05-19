@@ -66,10 +66,35 @@ public class Controller {
         view.getHitButton().addActionListener(e -> handleHit());
         view.getStayButton().addActionListener(e -> handleStay());
         view.getDoubleDownButton().addActionListener(e -> handleDoubleDown());
+        view.getResetStatsButton().addActionListener(e -> resetStats());
     }
 
     private void showStats() {
         view.switchToPanel(view.getStatsPanel()); // switches to the stats panel
+    }
+    
+    private void resetStats()
+    {
+        int confirm = JOptionPane.showConfirmDialog(
+        null,
+        "Are you sure you want to clear all players and stats?\nThis action cannot be undone.",
+        "Confirm Reset",
+        JOptionPane.YES_NO_OPTION,
+        JOptionPane.WARNING_MESSAGE
+    );
+
+    if (confirm == JOptionPane.YES_OPTION) {
+        try {
+            model.clearPlayersTable(); // clear the database table
+            view.refreshStatsPanel(view.getstatsDisplayPanel()); // refresh the UI panel
+            JOptionPane.showMessageDialog(null, "All players and stats have been reset.");
+        } catch (SQLException e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(null, "An error occurred while resetting stats.", "Error", JOptionPane.ERROR_MESSAGE);
+        }
+
+            view.switchToPanel(view.getStatsPanel()); // switch to stats panel
+        }
     }
 
     private void showRules() throws SQLException { // switches to the rules panel
@@ -323,6 +348,9 @@ public class Controller {
         }
         else
         {
+            outcomes = Winners.determineWinner(model.getDealer(), players);
+            model.savePlayerStats(players);
+            view.refreshStatsPanel(view.getstatsDisplayPanel());
             playAgain(); // check which players wish to play again
         }
     }

@@ -44,7 +44,7 @@ public class ActualPlayer extends Player {
         this.gamesDrawn = gamesDrawn;
         this.gamesLost = gamesLost; // Existing games lost
         this.currentStreak = currentStreak; // Existing current streak
-        this.totalLoses = 0; // You can adjust how to handle this
+        this.totalLoses = 0; 
         this.totalWinnings = 0;
     }
     

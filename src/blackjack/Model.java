@@ -39,7 +39,7 @@ public class Model {
         try {
             this.connection = DriverManager.getConnection(DB_URL);
             System.out.println(DB_URL + " Get Connected Successfully ....");
-            dropPlayersTable(); // use if need to remove all players from database
+            //dropPlayersTable(); // use if need to remove all players from database
             createTables(); // Create tables if they don't exist
             createRulesTable();
         } catch (SQLException e) {
@@ -181,6 +181,19 @@ public class Model {
         
     }
     
+    public void clearPlayersTable() throws SQLException 
+    {
+        String deleteSQL = "DELETE FROM Players";
+        try (Statement stmt = connection.createStatement())
+        {
+            stmt.executeUpdate(deleteSQL);
+            System.out.println("All players and stats cleared successfully.");
+        } catch (SQLException e)
+        {
+            System.err.println("Error while clearing the Players table: " + e.getMessage());
+        }
+    }
+    
     private void dropPlayersTable() throws SQLException // method to drop players table if needed.
     {
         String dropTableSQL = "DROP TABLE Players";
@@ -229,7 +242,7 @@ public class Model {
             e.printStackTrace();
         }
     }
-    
+    //Chat gpt assisted me with creating initializePlayers method
     public List<ActualPlayer> initializePlayers(ArrayList<String> names) throws SQLException // method to intitlize players from user input to play the game
     {
         List<ActualPlayer> players = new ArrayList<>();
@@ -255,7 +268,8 @@ public class Model {
                         if (balance == 0)
                         {
                             System.out.println("Welcome back, " + name + "! A new balance has been loaded for you.");
-                            players.add(new ActualPlayer(name)); // Initialize with default balance
+                            //players.add(new ActualPlayer(name)); // Initialize with default balance
+                            players.add(new ActualPlayer(name, 100, totalEarnings, gamesPlayed, gamesWon, gamesLost, gamesDrawn, currentStreak));
                         } 
                         else
                         {
@@ -319,28 +333,34 @@ public class Model {
         // Example SQL query to fetch selective data
         String query = "SELECT Name, Balance, TotalEarnings, GamesPlayed, GamesWon, GamesLost, GamesDrawn, CurrentWinStreak, JoinDate FROM Players";  
     
+        final String format = "%-15s | %12s | %15s | %13s | %10s | %11s | %13s | %20s | %-10s";
         try (Statement stmt = connection.createStatement();
             ResultSet rs = stmt.executeQuery(query)) {
-            while (rs.next())
-            {
-                String name = rs.getString("Name");
-                int balance = rs.getInt("Balance");
-                int totalEarnings = rs.getInt("TotalEarnings");
-                int gamesPlayed = rs.getInt("GamesPlayed");
-                int gamesWon = rs.getInt("GamesWon");
-                int gamesLost = rs.getInt("GamesLost");
-                int gamesDrawn = rs.getInt("GamesDrawn");
-                int currentWinStreak = rs.getInt("CurrentWinStreak");
-                Date joinDate = rs.getDate("JoinDate");
+            String header = String.format(format,
+            "Player", "Balance", "Total Earnings", "Games Played",
+            "Games Won", "Games Lost", "Games Drawn", "Current Win Streak", "Join Date"
+        );
+        statsList.add(header);
+        statsList.add("-".repeat(header.length())); // separator line
+
             
-                // Format the stat as a string
-                String stat = String.format(
-                "Player: %s | Balance: $%d | Total Earnings: $%d | Games Played: %d | Games Won: %d | Games Lost: %d | Games Drawn: %d | Current Win Streak: %d | Join Date: %s", 
-                name, balance, totalEarnings, gamesPlayed, gamesWon, gamesLost, gamesDrawn,currentWinStreak, joinDate != null ? joinDate.toString() : "N/A"
-            );
-            
-                statsList.add(stat);  // Add to the list
-            }
+             while (rs.next()) {
+            String name = rs.getString("Name");
+            String balance = String.format("$%,d", rs.getInt("Balance"));
+            String totalEarnings = String.format("$%,d", rs.getInt("TotalEarnings"));
+            String gamesPlayed = String.valueOf(rs.getInt("GamesPlayed"));
+            String gamesWon = String.valueOf(rs.getInt("GamesWon"));
+            String gamesLost = String.valueOf(rs.getInt("GamesLost"));
+            String gamesDrawn = String.valueOf(rs.getInt("GamesDrawn"));
+            String currentWinStreak = String.valueOf(rs.getInt("CurrentWinStreak"));
+            String joinDate = rs.getDate("JoinDate") != null ? rs.getDate("JoinDate").toString() : "N/A";
+
+            String stat = String.format(format,
+                name, balance, totalEarnings, gamesPlayed,
+                gamesWon, gamesLost, gamesDrawn, currentWinStreak, joinDate);
+
+            statsList.add(stat);
+        }
         }   
         return statsList;
     }
